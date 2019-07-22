@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./styles/reset.css">
+    <link rel="stylesheet" href="./styles/index.css">
+
+    <script src="./libs/echarts.min.js"></script>
+    <script src="./libs/vue.min.js"></script>
+    <script src="./utils/chart.js"></script>
+    <title>汽车网络安全态势感知</title>
+</head>
+
+<body>
+    <div id="app">
+        <!-- header -->
+        <div class="g-header">
+            <div class="g-header-title">{{title}}</div>
+            <div class="g-header-time">
+                2019-7-21 11:52:08
+            </div>
+        </div>
+        <!-- main -->
+        <div class="g-main">
+            <!-- left -->
+            <div class="g-left">
+                <div class="relative g-bc" style="height:610px">
+                    <cbox title="安全事件类型">
+                        <div class="g-full" slot="main" id="eventType"></div>
+                    </cbox>
+                </div>
+                <div class="g-box-mt relative" style="height:340px">
+                    <cbox title="攻击事件（次）">
+                        <div class="g-full" slot="main" id="attackEvent"></div>
+                    </cbox>
+                </div>
+            </div>
+            <!-- center -->
+            <div class="g-center">
+                <div class="g-select"></div>
+                <div style="height:696px">
+
+                </div>
+                <div class="relative" style="height:281px">
+                    <cbox>
+                        <div class="g-full" slot="main">
+                            1
+                        </div>
+                    </cbox>
+                </div>
+            </div>
+            <!-- right -->
+            <div class="g-right">
+                <div class="relative" style="height:350px">
+                    <cbox title="每日TOP5">
+                        <div class="g-full" slot="main" id="daily"></div>
+                    </cbox>
+                </div>
+                <div class="relative g-box-mt" style="height:285px">
+                    <cbox title="攻击零部件">
+                        <div class="g-full" slot="main">
+                            <ul class="attack-c-items">
+                                <li class="attack-c-item" v-for="item in attackComponents" :key="item.name">
+                                    <div class="ac-title" v-html="item.value"></div>
+                                    <div class="ac-data">
+                                        <img :src="item.img" alt="">
+                                        <span v-html="item.name"></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </cbox>
+                </div>
+                <div class="relative g-box-mt" style="height:285px">
+                    <cbox title="概览">
+                        <div slot="main">
+                            <ul class="g-overview">
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-data">
+                                        车辆总数
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-data">
+                                        今日增加
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-data">
+                                        攻击车辆
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-data">
+                                        累计事件
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-data">
+                                        今日事件
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </cbox>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="./utils/index.js"></script>
+</body>
+
+</html>

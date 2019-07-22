@@ -1,0 +1,235 @@
+#app {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    background-image: url(../image/background.JPG);
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: arial, 'Microsoft Yahei', '微软雅黑';
+    color: #fff;
+}
+
+/* hader */
+.g-header {
+    height: 80px;
+    background-image: url(../image/header.png);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+.g-header-title {
+    text-align: center;
+    line-height: 78px;
+    font-size: 40px;
+    color: #fff;
+    letter-spacing: 14px;
+    text-shadow: 0px 0px 5px #6ac6ff;
+}
+
+.g-header-time {
+    position: absolute;
+    right: 25px;
+    top: 10px;
+}
+
+/* main */
+.g-main {
+    position: absolute;
+    top: 80px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    padding: 0 25px;
+}
+
+.g-sele {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 50%);
+}
+
+.g-left {
+    flex: 1
+}
+
+.g-center {
+    width: 918px;
+    margin: 0 23px;
+}
+
+.g-right {
+    flex: 1
+}
+
+.relative {
+    position: relative;
+}
+
+/* box */
+.g-box-mt {
+    margin-top: 27px;
+}
+
+.g-box {
+    /* position: relative; */
+    min-height: 200px;
+}
+
+.g-box .g-box-title {
+    height: 38px;
+    background-image: url(../image/box-title.png);
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+    background-position: 0 0;
+    line-height: 36px;
+    padding-left: 13px;
+    margin-bottom: 19px;
+}
+
+.g-box .g-box--tcontent {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.g-box-main {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.g-box--it {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.g-box--it::after {
+    position: absolute;
+    content: " ";
+    width: 16px;
+    height: 18px;
+    background: url(../image/ilt.png) no-repeat 100% 100%;
+
+}
+
+.g-box--it::before {
+    position: absolute;
+    content: " ";
+    right: 0;
+    width: 16px;
+    height: 18px;
+    background: url(../image/irt.png) no-repeat 100% 100%;
+}
+
+.g-box--ib {
+    position: absolute;
+    bottom: 18px;
+    left: 0;
+    right: 0;
+
+}
+
+.g-box--ib::before {
+    position: absolute;
+    content: " ";
+    width: 16px;
+    height: 18px;
+    background: url(../image/ibt.png) no-repeat 100% 100%;
+}
+
+.g-box--ib::after {
+    position: absolute;
+    content: " ";
+    right: 0;
+    width: 16px;
+    height: 18px;
+    background: url(../image/ibr.png) no-repeat 100% 100%;
+}
+
+.g-box-content {
+    min-height: 100px;
+    position: absolute;
+    bottom: 1px;
+    left: 1px;
+    right: 1px;
+    top: 1px;
+    border: 2px solid #2852a0;
+    border-radius: 3px;
+}
+
+.g-full {
+    position: absolute;
+    right: 8px;
+    left: 8px;
+    top: 7px;
+    bottom: 7px;
+    background: rgba(64, 130, 255, 0.05);
+}
+
+.attack-c-items {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.attack-c-item {
+    width: 50%;
+    margin-bottom: 15px;
+}
+
+.attack-c-item .ac-title {
+    line-height: 70px;
+    color: #ffbd00;
+    font-weight: bold;
+    font-size: 40px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.attack-c-item .ac-data {
+    line-height: 18px;
+    text-align: center;
+}
+
+.attack-c-item .ac-data img {
+    vertical-align: middle;
+    height: 18px;
+}
+
+.attack-c-item .ac-data span {
+    height: 18px;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+.g-overview {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.g-overview-item {
+    width: 33.3%;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.g-overview-title {
+    line-height: 70px;
+    color: #ffbd00;
+    font-weight: bold;
+    font-size: 40px;
+    text-align: center;
+    letter-spacing: 2px;
+
+}
+
+.g-overview-data {
+    height: 18px;
+    font-weight: bold;
+}
