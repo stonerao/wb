@@ -370,7 +370,7 @@ var initMap = function ({
         return bgeo;
     }
     function initSvg(path, properties) {
-        //生成2d图形 
+        //生成地图
         var draw_s = drawShape();
         var shapeGeo = new THREE.ExtrudeGeometry(draw_s, optionsE)
         shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-450, -300, 0));
@@ -394,22 +394,12 @@ var initMap = function ({
         shape.userData.type = "path"
         // 加载动画
         shape.position.x = projection(properties.cp)[0] * 6;
-        shape.position.y = projection(properties.cp)[1] * 6; 
+        shape.position.y = projection(properties.cp)[1] * 6;
         createjs.Tween.get(shape.position, { override: true }).to({ x: 0, y: 0, z: 0 }, 3000, createjs.Ease.linear)
 
         // 生成轮廓线条
-        // console.log(draw_s)
-        //基础线条样式
-        var baseLineMaterial = {
-            linewidth: 1,
-            color: 0xff0000,
-            transparent: true,
-            // blending: THREE.AdditiveBlending,
-            fog: true,
-            depthWrite: false //, depthTest: false
-        }
 
-        _this.initSvgBox();
+        // 偏移
         var setCenter = {
             x: (width - 68) / 2,
             y: (height - 106) / 2
@@ -440,6 +430,10 @@ var initMap = function ({
             cloneLine.position.x -= setCenter.x;
             cloneLine.position.z = -2;
         })
+        // 生成地区名字
+        var cityNameCtx = addCityName("四川");
+
+        
     }
     var initCoffet = {
         Line1: new THREE.ShaderMaterial({
@@ -521,7 +515,7 @@ var initMap = function ({
             .enter()
             .append("path")
             .attr("d", (d, i) => {
-                // svgps.push(path(d))   
+                // svgps.push(path(d)) 
                 initSvg(path(d), d.properties)
                 if (i == geo.features.length - 1) {
                     console.log(svgGroups)
@@ -536,7 +530,7 @@ var initMap = function ({
         /*   geo.features.forEach((path, i) => {
               var pos = projection(path.properties.cp);
               var geometry = new THREE.BoxGeometry(5, 5, 111);
-              var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+              var material = new THREE.MeshBasicMaterial({ color: 0x00Fff00 });
               var cube = new THREE.Mesh(geometry, material);
               svgGroups.add(cube)
               cube.position.x = pos[0]
@@ -548,6 +542,27 @@ var initMap = function ({
         var pos = _this.projection(arr);
         pos = [pos[0] - (width - 68) / 2, pos[1] - (height - 106) / 2]
         return pos
+    }
+    function addCityName(){
+        // 添加城市名字 
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.pow(2,4);
+        canvas.height = Mat.pow(2,4);
+        return canvas;
+    }
+    function addCanvasMesh({
+        width = 256,
+        height = 256,
+        img
+    }) {
+        //img 转换 canvas
+        let canvas = document.createElement('canvas');
+        //导入材质
+        canvas.width = width;
+        canvas.height = height;
+        let context = canvas.getContext("2d");
+        context.drawImage(img, 0, 0, width, height);
+        return canvas
     }
     this.load = function () {
         this.init();
