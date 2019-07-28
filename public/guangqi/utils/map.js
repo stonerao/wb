@@ -161,9 +161,10 @@ var initMap = function ({
             alpha: true,
             canvas: _this.currCanvas
         });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        // renderer.setClearColor(renderer.background);
+        renderer.setClearColor(renderer.background, 1.0);
         renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearAlpha(0.5);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.gammaInput = true;
@@ -249,12 +250,12 @@ var initMap = function ({
         }) */
     }
     var optionsE = {
-        depth: 20,
+        depth: 10,
         bevelThickness: 0,
         bevelSize: 0,
         bevelEnabled: true,
         bevelSegments: 0,
-        curveSegments: 1,
+        curveSegments: 3,
         steps: 1,
     };
     var svgGroups = new THREE.Group();
@@ -374,12 +375,12 @@ var initMap = function ({
         var draw_s = drawShape();
         var shapeGeo = new THREE.ExtrudeGeometry(draw_s, optionsE)
         shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-450, -300, 0));
-        var material = new THREE.MeshLambertMaterial({
+        var material = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color(sceneOptions.sceneStyle.blockColor),
             flatShading: THREE.FlatShading,
             transparent: true,
-            // blending: THREE.AdditiveBlending,
-            opacity: 0.7
+            blending: THREE.AdditiveBlending,
+            opacity: 0.8
         });
         var shape = new THREE.Mesh(shapeGeo, material);
         function drawShape() {
@@ -393,9 +394,10 @@ var initMap = function ({
         svgGroups.add(shape);
         shape.userData.type = "path"
         // 加载动画
-        shape.position.x = projection(properties.cp)[0] * 6;
-        shape.position.y = projection(properties.cp)[1] * 6;
-        createjs.Tween.get(shape.position, { override: true }).to({ x: 0, y: 0, z: 0 }, 3000, createjs.Ease.linear)
+        var pro = projection(properties.cp)
+        shape.position.x = pro[0] * 6;
+        shape.position.y = pro[1] * 6;
+        createjs.Tween.get(shape.position, { override: true }).to({ x: 0, y: 0, z: 0 }, 2000, createjs.Ease.linear)
 
         // 生成轮廓线条
 
@@ -424,36 +426,56 @@ var initMap = function ({
             shape.add(line);
             var cloneLine = new THREE.Mesh(_lGeo, initCoffet.Line2);
             shape.add(cloneLine)
-            cloneLine.material.opacity = 0;
+            // cloneLine.material.opacity = 0.2;
             cloneLine.position.z = optionsE.depth;
             cloneLine.position.y -= setCenter.y;
             cloneLine.position.x -= setCenter.x;
-            cloneLine.position.z = -2;
         })
         // 生成地区名字
-        var cityNameCtx = addCityName("四川");
-
-        
+        var cityNameCtx = addCityName({
+            width: 128,
+            height: 64, text: properties.name,
+            color: "#ffffff"
+        });
+        var spriteMap = new THREE.Texture(cityNameCtx)
+        spriteMap.needsUpdate = true;
+        var spriteMaterial = new THREE.SpriteMaterial({
+            map: spriteMap,
+            transparent: true,
+            depthWrite: false,
+            opacity: 0.8
+        });
+        var sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(36, 18);
+        sprite.position.set(pro[0], pro[1] - 10, -15)
+        shape.add(sprite);
+        // 添加动画
+        var plane = initCoffet.createAnimatePlane()
+        plane.name = "animatePlane";
+        shape.add(plane)
+        plane.position.set(pro[0], pro[1] + 10, -10);
+        plane.userData = {
+        }
     }
     var initCoffet = {
         Line1: new THREE.ShaderMaterial({
             uniforms: {
                 u_color: { value: new THREE.Color(sceneOptions.sceneStyle.borderColor) },
                 u_opacity: { value: 0.8 },
-                u_width: { value: -2 },
+                u_width: { value: -1 },
             },
             transparent: true,
             side: THREE.DoubleSide,
             depthWrite: false,
-            // blending: THREE.AdditiveBlending,
+            blending: THREE.AdditiveBlending,
             vertexShader: _Shaders.SplineVShader,
             fragmentShader: _Shaders.SplineFShader,
         }),
         Line2: new THREE.ShaderMaterial({
             uniforms: {
                 u_color: { value: new THREE.Color(sceneOptions.sceneStyle.borderColor) },
-                u_opacity: { value: 0.5 },
-                u_width: { value: -2 },
+                u_opacity: { value: 0.2 },
+                u_width: { value: -1 },
             },
             transparent: true,
             side: THREE.DoubleSide,
@@ -463,8 +485,30 @@ var initMap = function ({
             fragmentShader: _Shaders.SplineFShader,
         }),
         createLine: function (_lGeo, op) {
-
             return
+        },
+        loadTeutr: new THREE.TextureLoader().load('./image/p3.png'),
+        createAnimatePlane: function () {
+            var g = new THREE.Group();
+            var geometry = new THREE.PlaneBufferGeometry(5, 5, 5);
+            for (var i = 0; i < 4; i++) {
+                var material = new THREE.MeshBasicMaterial({
+                    map: initCoffet.loadTeutr,
+                    transparent: true,
+                    side: THREE.NormalBlending,
+                    color: "#ff0000",
+                    depthWrite: false,
+                    opacity: 1 - (i * 1 / 4)
+                });
+                var plane = new THREE.Mesh(geometry, material);
+                plane.scale.set(i * 2.5 + 1, i * 2.5 + 1, i * 2.5 + 1);
+                plane.userData = {
+                    process: 1 - (i * 1 / 4)
+                }
+                g.add(plane);
+            }
+            // plane.rotation.x = -Math.PI / 2;
+            return g;
         }
     }
     this.initSvgBox = function () {
@@ -518,7 +562,6 @@ var initMap = function ({
                 // svgps.push(path(d)) 
                 initSvg(path(d), d.properties)
                 if (i == geo.features.length - 1) {
-                    console.log(svgGroups)
                 }
                 return path(d)
             })
@@ -543,11 +586,23 @@ var initMap = function ({
         pos = [pos[0] - (width - 68) / 2, pos[1] - (height - 106) / 2]
         return pos
     }
-    function addCityName(){
-        // 添加城市名字 
-        var canvas = document.createElement("canvas");
-        canvas.width = Math.pow(2,4);
-        canvas.height = Mat.pow(2,4);
+    function addCityName({ width = 256, height = 32, text = "", color = "#ffba47" }) {
+        let canvas = document.createElement('canvas');
+        //导入材质
+        canvas.width = width;
+        canvas.height = height;
+        var context = canvas.getContext("2d");
+        // context.fillStyle = "transparent";
+        context.fillStyle = "rgba(0,0,0,0)";
+        context.fillRect(0, 0, width, height);
+        context.fill()
+        context.closePath();
+        context.font = 'bold 42px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = color;
+        context.lineWidth = 20;
+        context.fillText(text, width / 2, height / 2);
         return canvas;
     }
     function addCanvasMesh({
@@ -574,12 +629,35 @@ var initMap = function ({
         render();
     }
     this.load();
-
+    
+    function animatePlanes() {
+        svgGroups.children.forEach(child => {
+            child.children.forEach(elem => {
+                if (elem.name === "animatePlane") {
+                    elem.children.forEach(node => {
+                        node.userData.process += 0.004;
+                        var process = node.userData.process;
+                        node.material.opacity = 1 - node.userData.process;
+                        node.scale.set(process * 9, process * 9, process * 9);
+                        if (process >= 1) {
+                            node.userData.process = 0
+                        }
+                    })
+                }
+            })
+        })
+    }
+    setInterval(() => {
+        svgGroups.children.forEach((child,i) => {
+            child.material.color.set(new THREE.Color(`rgb(${i*7},${parseInt(Math.random() * 255)},${parseInt(Math.random() * 255)})`))
+        })
+    }, 5000)
     function render() {
         if (controls) controls.update();
         if (stats) stats.update();
         renderer.render(scene, camera);
         requestAnimationFrame(render);
+        animatePlanes()
     }
 
 }
