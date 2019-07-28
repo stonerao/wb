@@ -20,6 +20,17 @@ var box = {
         title: String
     }
 }
+var attackList = [...new Array(8)].map((elem, index) => {
+    return {
+        id: index + 1,
+        vin: "LS5A3ADE0AB046791",
+        code: "421Ads",
+        ip: "255.255.255.255",
+        type: "设置ACK和RST标志位的dos攻击",
+        address: "四川省 达州市",
+        date: "2019-7-24 21:31:36"
+    }
+})
 var VM = new Vue({
     el: "#app",
     data: {
@@ -28,7 +39,7 @@ var VM = new Vue({
             {
                 name: "IVI",
                 img: "./image/IVI.png",
-                value:4021
+                value: 4021
             }, {
                 name: "TBOX",
                 img: "./image/TBOX.png",
@@ -42,12 +53,14 @@ var VM = new Vue({
                 img: "./image/EUCs.png",
                 value: 54021
             }
-        ]
+        ],
+        attackList: attackList
     },
     components: {
         cbox: box
     },
     mounted() {
+        document.querySelector(".l-loding").remove()
         var names = [
             '待选项的IP包（一）',
             '待选项的IP包（二）',
@@ -87,8 +100,12 @@ var VM = new Vue({
             data: dailyDatas,
             color: "#ff8d36",
             dstColor: "#ffea61"
-
         })
-
+        /* map */
+        var dom = document.getElementById("map");
+        var map = new initMap({
+            geo: china,
+            dom: dom
+        })
     }
 })

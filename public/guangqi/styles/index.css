@@ -11,7 +11,9 @@
     font-family: arial, 'Microsoft Yahei', '微软雅黑';
     color: #fff;
 }
-
+#svg{
+    display: none;
+}
 /* hader */
 .g-header {
     height: 80px;
@@ -229,7 +231,138 @@
 
 }
 
+.g-select {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    transform: translate(-50%, 0);
+    cursor: pointer;
+}
+
+.g-select:hover .g-selectlist {
+    display: block;
+}
+.g-select:hover  img{
+   transform: rotate(180deg);
+}
+
+.g-select span {
+    font-size: 16px;
+}
+
+.g-selectlist {
+    position: absolute;
+    text-align: center;
+    line-height: 28px;
+    padding-top: 5px;
+    display: none;
+}
+
+.g-selectlist li {
+    transition: all .2s;
+}
+
+.g-selectlist li:hover {
+    color: #ff4b4b;
+}
+
+.g-select img {
+    height: 10px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px;
+    margin-left: 5px;
+}
+
+
 .g-overview-data {
     height: 18px;
     font-weight: bold;
+}
+
+.g-scroll-list {
+    background: url(../image/attack_list.png) no-repeat 100% 100%;
+    width: 275px;
+    height: 44px;
+    line-height: 44px;
+    color: #fff;
+    position: absolute;
+    left: 50%;
+    top: -40px;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.g-scroll-list img {
+    vertical-align: middle;
+    line-height: 44px;
+    height: 28px;
+    position: relative;
+    top: -3px;
+    margin-right: 5px;
+}
+
+.g-scroll-list span {
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.g-atballe-pad {
+    padding: 12px 20px;
+}
+
+.g-atballe {
+    width: 100%;
+
+}
+
+.g-atballe thead {
+    font-weight: 600;
+}
+
+.g-atballe thead tr {
+    margin-bottom: 8px;
+}
+
+.g-atballe tr {
+    line-height: 26px;
+}
+
+.g-atballe td {
+    padding: 0 5px;
+
+}
+
+.g-atballe thead,
+.g-atballe tbody {
+    text-align: center;
+    font-size: 14px;
+}
+
+.g-atballe tbody {
+    color: #fff;
+}
+
+
+.g-at-ac1 {
+    color: #ffbc4b
+}
+
+.g-at-ac2 {
+    color: #ff4b4b
+}
+
+.g-at-ac3 {
+    opacity: 0.8;
+}
+.g-emap{
+    position: relative;
+}
+.gmap{
+    position: absolute;
+    left:-25px;
+    top:-10px;
+    right:-25px;
+    bottom:0;
 }
