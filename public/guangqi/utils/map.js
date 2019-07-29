@@ -392,7 +392,12 @@ var initMap = function ({
         // shape.position.z -= 1000
 
         svgGroups.add(shape);
-        shape.userData.type = "path"
+        shape.userData = {
+            type: "path",
+            ...properties,
+            currValue: 0,
+            value: 0
+        }
         // 加载动画
         var pro = projection(properties.cp)
         shape.position.x = pro[0] * 6;
@@ -434,7 +439,8 @@ var initMap = function ({
         // 生成地区名字
         var cityNameCtx = addCityName({
             width: 128,
-            height: 64, text: properties.name,
+            height: 64,
+            text: properties.name,
             color: "#ffffff"
         });
         var spriteMap = new THREE.Texture(cityNameCtx)
@@ -447,13 +453,39 @@ var initMap = function ({
         });
         var sprite = new THREE.Sprite(spriteMaterial);
         sprite.scale.set(36, 18);
-        sprite.position.set(pro[0], pro[1] - 10, -15)
+        switch (properties.name) {
+            case "广东":
+                sprite.position.set(pro[0], pro[1] - 25, -15)
+                break;
+            case "澳门":
+                sprite.position.set(pro[0] - 10, pro[1], -15)
+                break;
+            case "香港":
+                sprite.position.set(pro[0] + 10, pro[1], -15)
+                break;
+            default:
+                sprite.position.set(pro[0], pro[1] - 10, -15)
+        }
+
         shape.add(sprite);
         // 添加动画
         var plane = initCoffet.createAnimatePlane()
         plane.name = "animatePlane";
         shape.add(plane)
-        plane.position.set(pro[0], pro[1] + 10, -10);
+        switch (properties.name) {
+            case "广东":
+                plane.position.set(pro[0], pro[1] - 15, -10);
+                break;
+            case "澳门":
+                plane.position.set(pro[0] - 10, pro[1] + 10, -10);
+                break;
+            case "香港":
+                plane.position.set(pro[0] + 10, pro[1] + 10, -10);
+                break;
+            default:
+                plane.position.set(pro[0], pro[1] + 5, -10);
+        }
+
         plane.userData = {
         }
     }
@@ -491,25 +523,73 @@ var initMap = function ({
         createAnimatePlane: function () {
             var g = new THREE.Group();
             var geometry = new THREE.PlaneBufferGeometry(5, 5, 5);
-            for (var i = 0; i < 4; i++) {
+            for (var i = 0; i < 1; i++) {
                 var material = new THREE.MeshBasicMaterial({
                     map: initCoffet.loadTeutr,
                     transparent: true,
-                    side: THREE.NormalBlending,
+                    side: THREE.AdditiveBlending,
                     color: "#ff0000",
                     depthWrite: false,
-                    opacity: 1 - (i * 1 / 4)
+                    opacity: 1
                 });
                 var plane = new THREE.Mesh(geometry, material);
                 plane.scale.set(i * 2.5 + 1, i * 2.5 + 1, i * 2.5 + 1);
                 plane.userData = {
-                    process: 1 - (i * 1 / 4)
+                    process: 1 - (i * 1 / 4),
+                    show: false
                 }
                 g.add(plane);
             }
             // plane.rotation.x = -Math.PI / 2;
             return g;
         }
+    }
+    this.initCityNumber = function (properties) {
+        //显示当前危险个数
+        var num = parseInt(Math.random() * 1000);
+        var color = "#ffffff";
+        if (num > 800) {
+            color = "#ff0000"
+        } else if (num > 400) {
+            color = "#ffa000"
+        }
+        var cityNumber = addCityName({
+            width: 128,
+            height: 64,
+            text: parseInt(Math.random() * 1000),
+            color: color
+        })
+        var spriteMap = new THREE.Texture(cityNumber)
+        spriteMap.needsUpdate = true;
+        var cityNumberMaterial = new THREE.SpriteMaterial({
+            map: spriteMap,
+            transparent: true,
+            // blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            opacity: 0.8
+        });
+        var spriteNumber = new THREE.Sprite(cityNumberMaterial);
+        spriteNumber.name = "cityNumber"
+        var points = projection(properties.cp);
+        var x = points[0], y = points[1] + 5;
+        switch (properties.name) {
+            case "广东":
+                y -= 15;
+
+                break;
+            case "澳门":
+                x -= 10;
+                y += 9;
+                break;
+            case "香港":
+                x += 10;
+                y += 9;
+                break;
+
+        }
+        spriteNumber.position.set(x, y, -10)
+        spriteNumber.scale.set(40, 20, 20);
+        return spriteNumber
     }
     this.initSvgBox = function () {
         var boxs = new THREE.Group();
@@ -523,29 +603,7 @@ var initMap = function ({
         var series = testData.series;
         var paths = document.querySelectorAll("path");
 
-        /*  paths.forEach((path, i) => {
-             var status = false
-             if (i == paths.length - 1) {
-                 status = true
-             }
-             initSvg(path.getAttribute("d"), status)
-         }) */
-        //    series.forEach((x, i) => {
-        //       /*   console.log(i)
-        //         initSvgMap(x.path) */
-        //        initSvg(x.path, false)
-        //     }) 
-        // function di(arr){
-        //     if(arr.length==0){
-        //         return
-        //     }
-        //     var obj = arr.pop();
-        //     initSvgMap(obj.path)
-        //     setTimeout(()=>{
-        //         di(arr)
-        //     },2000)
-        // }
-        // di(series)
+
         _this.projection = d3.geoMercator().fitExtent([[0, 0], [width, height]], geo);
         // path
         var path = d3.geoPath().projection(_this.projection);
@@ -570,6 +628,19 @@ var initMap = function ({
             .attr("fill", function (d, i) {
                 return "#fff0";
             })
+        setInterval(() => {
+            // initCityNumber 
+            geo.features.forEach(x => {
+                svgGroups.traverse(child => {
+                    if (x.properties.name === child.userData.name) {
+                        var num = Math.random() * 100;
+                        child.userData.currValue = child.userData.value;
+                        child.userData.value = num;
+
+                    }
+                })
+            })
+        }, 4000)
         /*   geo.features.forEach((path, i) => {
               var pos = projection(path.properties.cp);
               var geometry = new THREE.BoxGeometry(5, 5, 111);
@@ -629,18 +700,48 @@ var initMap = function ({
         render();
     }
     this.load();
-    
+    _this.dispose = function (mesh) {
+        /* 删除模型 */
+        mesh.traverse(function (item) {
+            if (item.geometry) {
+                item.geometry.dispose(); //删除几何体
+            }
+            if (item.material) {
+                item.material.dispose(); //删除材质
+            }
+        });
+        mesh.remove();
+    }
     function animatePlanes() {
         svgGroups.children.forEach(child => {
+            // 改变值 
+            if (child.userData.currValue !== child.userData.value) {
+                for (var i = child.children.length - 1; i >= 0; i--) {
+                    var elem = child.children[i]
+                    if (elem.name == "cityNumber") {
+                        _this.dispose(elem);
+                        child.remove(elem)
+                    }
+                }
+                child.userData.currValue = child.userData.value;
+                var numberPoint = _this.initCityNumber(child.userData);
+                numberPoint.name = "cityNumber";
+                child.add(numberPoint);
+            }
             child.children.forEach(elem => {
                 if (elem.name === "animatePlane") {
                     elem.children.forEach(node => {
-                        node.userData.process += 0.004;
-                        var process = node.userData.process;
-                        node.material.opacity = 1 - node.userData.process;
-                        node.scale.set(process * 9, process * 9, process * 9);
-                        if (process >= 1) {
-                            node.userData.process = 0
+                        if (node.userData.show) {
+                            node.visible = true;
+                            node.userData.process += 0.01;
+                            var process = node.userData.process;
+                            node.material.opacity = 1 - node.userData.process + 0.4;
+                            node.scale.set(process * 15, process * 15, process * 15);
+                            if (process >= 1) {
+                                node.userData.process = 0
+                            }
+                        } else {
+                            node.visible = false;
                         }
                     })
                 }
@@ -648,8 +749,15 @@ var initMap = function ({
         })
     }
     setInterval(() => {
-        svgGroups.children.forEach((child,i) => {
-            child.material.color.set(new THREE.Color(`rgb(${i*7},${parseInt(Math.random() * 255)},${parseInt(Math.random() * 255)})`))
+        svgGroups.children.forEach((child, i) => {
+            child.material.color.set(new THREE.Color(`rgb(${255},${90},${parseInt(Math.random() * 255)})`))
+            child.children.forEach(elem => {
+                if (elem.name === "animatePlane") {
+                    elem.children.forEach(node => {
+                        node.userData.show = Math.random() < 0.5 ? true : false;
+                    })
+                }
+            })
         })
     }, 5000)
     function render() {
