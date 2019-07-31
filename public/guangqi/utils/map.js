@@ -18,14 +18,14 @@ var initMap = function ({
     var currMesh = null;
     var cameraOption = {/*  */
         position: {
-            x: 0,
-            y: 750,
-            z: 300
+            x: -3.884992521293494,
+            y: 719.0519569394013,
+            z: 436.5194039842056
         },
         ratatoion: {
-            x: 0,
-            y: 0,
-            z: 0
+            _x: -1.0251899019611612,
+            _y: -0.00461846672445632,
+            _z: -0.007607546501251655
         }
     }
     var controls = {
@@ -168,6 +168,7 @@ var initMap = function ({
         // renderer.setClearAlpha(0.5);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMapEnabled  = true;
         renderer.gammaInput = true;
         renderer.gammaOutput = true
         //scene
@@ -177,7 +178,10 @@ var initMap = function ({
         camera.position.set(...Object.values(cameraOption.position));
         camera.rotation.set(...Object.values(cameraOption.ratatoion));
         camera.lookAt(scene.position);
-        scene.add(camera)
+        scene.add(camera);
+        setTimeout(() => {
+            console.log(camera)
+        }, 5000)
     }
     this.initGeo = function () {
         var geometry = new THREE.BoxBufferGeometry(111, 111, 111);
@@ -218,12 +222,14 @@ var initMap = function ({
     this.initLight = function (path) {
         var light = new THREE.AmbientLight(0x404040); // soft white light
         scene.add(light);
-
-        // White directional light at half intensity shining from the top.
-          var directionalLight = new THREE.DirectionalLight(0xffffff, 0.02);
-        scene.add(directionalLight);  
-        var light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
-        scene.add(light); 
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(50,400, 120);
+        spotLight.castShadow = true;//开启灯光投射阴影
+        // // White directional light at half intensity shining from the top.
+        // var directionalLight = new THREE.DirectionalLight(0xffffff, 0.02);
+        // scene.add(directionalLight);
+           var light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
+         scene.add(light);
     }
     function svgGroup() {
         var boxs = new THREE.Group();
@@ -261,9 +267,9 @@ var initMap = function ({
     };
     var svgGroups = new THREE.Group();
     svgGroups.rotation.x = Math.PI / 2;
-    svgGroups.position.y = 0;
+    svgGroups.position.y = 70;
     svgGroups.position.x = -10;
-    svgGroups.position.z = -110;
+    svgGroups.position.z = -90;
     function reverse(c) { if (!THREE.ShapeUtils.isClockWise(c)) c = c.reverse(); }
     function getBevelVec(inPt, inPrev, inNext) {
         var v_trans_x, v_trans_y, shrink_by = 1;
@@ -376,7 +382,7 @@ var initMap = function ({
         var draw_s = drawShape();
         var shapeGeo = new THREE.ExtrudeGeometry(draw_s, optionsE)
         shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-450, -300, 0));
-        var material = new THREE.MeshPhysicalMaterial({
+        var material = new THREE.MeshStandardMaterial({
             color: new THREE.Color(sceneOptions.sceneStyle.blockColor),
             flatShading: THREE.FlatShading,
             // transparent: true,
@@ -638,20 +644,47 @@ var initMap = function ({
             .attr("fill", function (d, i) {
                 return "#fff0";
             })
-        var index = 0
-        setInterval(() => {
-            geo.features.forEach(x => {
-                svgGroups.traverse(child => {
-                    if (x.properties.name === child.userData.name) {
-                        var num = parseInt(Math.random() * 1000);
-                        child.userData.currValue = child.userData.value;
-                        child.userData.value = num;
+        var index = 0;
+        var typeAttack = ['2-1-1', '2-2-4', '2-2-5', '2-3-1', '2-3-2']
+        setTimeout(() => {
+            svgGroups.traverse(child => {
+                var num = parseInt(Math.random() * 100);
+                child.userData.currValue = num
+                child.userData.value = num;
+            })
+            setInterval(() => {
+                geo.features.forEach(x => {
+                    svgGroups.traverse(child => {
+                        if (x.properties.name === child.userData.name) {
+                            var num = parseInt(Math.random() * 1000);
+                            child.userData.currValue = child.userData.value;
+                            child.userData.value += Math.random() < 0.6 ? 0 : ~~(Math.random() * 20);
 
+                        }
+                    })
+                    if (Math.random() < 0.3) {
+                        index++;
+                        var t = typeAttack[index % (typeAttack.length - 1)]
+                        _this.initTipes({ width: 128, height: 128, type: t, properties: x.properties }, function (mesh) {
+                            var detp = createjs.Tween.get(mesh.position, { override: true }).to({ z: -80 }, 2000, createjs.Ease.elasticInOut).call(function () {
+                                mesh.position.z += 2;
+                                setTimeout(function () {
+                                    _this.dispose(mesh);
+                                    tipsSprites.remove(mesh);
+                                    detp.removeAllEventListeners();
+                                    // console.log(detp)
+                                }, 500)
+                            })
+                            detp.addEventListener("change", function () {
+                                mesh.material.opacity = mesh.position.z / -80;
+                            })
+
+                        })
                     }
                 })
-            })
-            console.log(index)
-        }, 4000)
+
+            }, 1000)
+        }, 3000)
         /*   geo.features.forEach((path, i) => {
               var pos = projection(path.properties.cp);
               var geometry = new THREE.BoxGeometry(5, 5, 111);
@@ -663,14 +696,51 @@ var initMap = function ({
               cube.position.z = -111 / 2
           }) */
     }
+    var tipsSprites = new THREE.Group();
+    var tipsSpritesArr = [];
+    var urlImg = ""
+    function initTipesCanvas({ width = 256, height = 64, type, icon }, callback) {
+        let canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        var context = canvas.getContext("2d");
+        var img = new Image();
+        img.src = './image/' + type + '.png';
+        img.onload = function () {
+            context.drawImage(img, 0, 0, width, height);
+            typeof callback === 'function' ? callback(canvas) : null;
+        }
+    }
+    _this.initTipes = function ({ width = 256, height = 64, type, icon, properties }, callback) {
+        initTipesCanvas({ width, height, type, icon }, function (canvas) {
+            // 生成sprite
+            // callback()
+            var spriteMap = new THREE.Texture(canvas)
+            spriteMap.needsUpdate = true;
+            var cityNumberMaterial = new THREE.SpriteMaterial({
+                map: spriteMap,
+                transparent: true,
+                // blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                opacity: 1
+            });
+            var spriteNumber = new THREE.Sprite(cityNumberMaterial);
+            tipsSprites.add(spriteNumber);
+            tipsSpritesArr.push(spriteNumber);
+            var position = projection(properties.cp)
+            callback(spriteNumber);
+            spriteNumber.scale.set(20, 20, 20)
+            spriteNumber.position.set(position[0], position[1], 0);
+
+        })
+    }
     function projection(arr) {
         var pos = _this.projection(arr);
-        pos = [pos[0] - (width - 68) / 2, pos[1] - (height - 106) / 2]
+        pos = [pos[0] - (width - 68) / 2, pos[1] - (height - 106) / 2];
         return pos
     }
     function addCityName({ width = 256, height = 32, text = "", color = "#ffba47" }) {
         let canvas = document.createElement('canvas');
-        //导入材质
         canvas.width = width;
         canvas.height = height;
         var context = canvas.getContext("2d");
@@ -709,6 +779,7 @@ var initMap = function ({
         this.initSvg();
         // this.initGeo();
         render();
+        svgGroups.add(tipsSprites)
         _this.currCanvas.addEventListener("mouseup", onMouseUp)
     }
     this.load();
@@ -724,7 +795,7 @@ var initMap = function ({
         });
         mesh.remove();
     }
-    function onMouseUp(event){
+    function onMouseUp(event) {
         var canvas = _this.currCanvas;
         event.preventDefault();
         var raycaster = new THREE.Raycaster();
@@ -733,12 +804,11 @@ var initMap = function ({
         mouse.y = -((event.clientY - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(svgShape);
-        if (intersects.length>0){
-            console.log(intersects[0].object.userData)
+        if (intersects.length > 0) {
         }
     }
     var MaxNumber = 1000;//最大值
-    var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#f8c7c0']
+    var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#9ce0d4']
     function animatePlanes() {
         svgGroups.children.forEach(child => {
             // 改变值 
@@ -778,7 +848,7 @@ var initMap = function ({
             child.children.forEach(elem => {
                 if (elem.name === "animatePlane") {
                     elem.children.forEach(node => {
-                        if (child.userData.value >= 600) {
+                        if (child.userData.value >= 100) {
                             node.userData.show = true
                         }
                         if (node.userData.show) {
@@ -789,7 +859,8 @@ var initMap = function ({
                             node.scale.set(process * 15, process * 15, process * 15);
                             if (process >= 1) {
                                 node.userData.process = 0;
-                                node.userData.show = false;
+                                // node.userData.show = false;
+                                node.userData.show = Math.random() > 0.9? true : false;
                             }
                         } else {
                             node.visible = false;
