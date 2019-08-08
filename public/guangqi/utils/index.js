@@ -107,5 +107,8 @@ var VM = new Vue({
             geo: china,
             dom: dom
         })
+        window.addEventListener("resize",()=>{
+            map.onSize()
+        })
     }
 })

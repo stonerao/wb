@@ -13,6 +13,7 @@ var initMap = function ({
         parentDom: null,
         canvas: null,
     })
+    var resolution = new THREE.Vector2(window.innerWidth, window.innerHeight);
     var groups = [];
     var svgShape = [];
     var currMesh = null;
@@ -103,51 +104,12 @@ var initMap = function ({
             'gl_Position = projectionMatrix * modelViewMatrix * vec4( vPos, 1.0 );',
             '}'
         ].join("\n"),
-        SpotVShader: [
-            'uniform vec3 u_color; uniform float u_opacity; uniform float u_size; ',
-            'uniform float u_time; attribute float cOffset; varying float vTime; ',
-            'varying vec4 vColor; void main() { vTime = u_time + cOffset; ',
-            'vColor = vec4( u_color, u_opacity ); ',
-            'vec4 mP = modelViewMatrix * vec4( position, 1.0 ); ',
-            'gl_PointSize = u_size * 300.0/(-mP.z ); ',
-            'gl_Position = projectionMatrix * mP; } ',
-        ].join("\n"),
-        PointVShader: [
-            'uniform vec3 u_color; uniform float u_opacity; uniform float u_size; ',
-            'uniform float u_time; uniform float u_len; uniform float u_ratio;',
-            'attribute float cSize; attribute float cOpacity; attribute float cId; ',
-            'varying vec4 vColor; void main() { float _k = u_ratio + u_time; ',
-            'if ( _k >= 1.0 ) _k -= 1.0; ',
-            'float _m = u_len*_k, _l = 108.0, _o = 1.0, _s = 1.0; ',
-            'if ( cId >= _m-_l && cId <= _m ) { ',
-            '	float _n = 1.0+(cId-_m)/_l; ',
-            '	_o = 3.6*_n; _s = 2.0*_n; } ',
-            'vColor = vec4( u_color, u_opacity * cOpacity *_o ); ',
-            'vec4 mP = modelViewMatrix * vec4( position, 1.0 ); ',
-            'gl_PointSize = _s * u_size * 300.0/(-mP.z ); ',
-            'gl_Position = projectionMatrix * mP; } ',
-        ].join("\n"),
+
 
         SplineFShader: [
             "varying vec4 vColor; void main() {  gl_FragColor = vColor; } ",
         ].join("\n"),
-        SpreadFShader: [
-            "uniform sampler2D u_txue; varying vec4 vColor; ",
-            "varying vec2 vUv; void main() {  gl_FragColor = vColor * texture2D(u_txue, vUv); } ",
-        ].join("\n"),
-        SpotFShader: [
-            "uniform sampler2D u_txue; varying float vTime; varying vec4 vColor; ",
-            "const float pi2 = 6.2831853071795866; void main() { ",
-            "float c = cos( vTime * pi2 ); float s = sin( vTime * pi2 ); ",
-            "vec2 rotatedUV = vec2( c*(gl_PointCoord.x-.5) + s*(gl_PointCoord.y-.5) + .5,",
-            " .5 -c*(gl_PointCoord.y-.5) + s*(gl_PointCoord.x-.5) );",
 
-            "gl_FragColor = vColor * texture2D( u_txue, rotatedUV ); } ",
-        ].join("\n"),
-        PointFShader: [
-            "uniform sampler2D u_txue; varying vec4 vColor; void main() { ",
-            "gl_FragColor = vColor * texture2D( u_txue, gl_PointCoord ); } ",
-        ].join("\n"),
     };
     this.init = function () {
         width = _this.currDom.clientWidth;
@@ -168,7 +130,7 @@ var initMap = function ({
         // renderer.setClearAlpha(0.5);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.shadowMapEnabled  = true;
+        renderer.shadowMapEnabled = true;
         renderer.gammaInput = true;
         renderer.gammaOutput = true
         //scene
@@ -179,9 +141,7 @@ var initMap = function ({
         camera.rotation.set(...Object.values(cameraOption.ratatoion));
         camera.lookAt(scene.position);
         scene.add(camera);
-        setTimeout(() => {
-            console.log(camera)
-        }, 5000)
+
     }
     this.initGeo = function () {
         var geometry = new THREE.BoxBufferGeometry(111, 111, 111);
@@ -220,41 +180,35 @@ var initMap = function ({
 
     }
     this.initLight = function (path) {
-        var light = new THREE.AmbientLight(0x404040); // soft white light
+        /* var light = new THREE.AmbientLight(0x404040); // soft white light
+        light.castShadow  = true;
         scene.add(light);
-        var spotLight = new THREE.SpotLight(0xffffff);
-        spotLight.position.set(50,400, 120);
-        spotLight.castShadow = true;//开启灯光投射阴影
-        // // White directional light at half intensity shining from the top.
-        // var directionalLight = new THREE.DirectionalLight(0xffffff, 0.02);
-        // scene.add(directionalLight);
-           var light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
-         scene.add(light);
-    }
-    function svgGroup() {
-        var boxs = new THREE.Group();
-        groups.forEach(node => {
-            let n = node.clone()
-            groups.push(n)
-            boxs.add(n)
-        })
-        var box = new THREE.Box3().expandByObject(boxs);
-        var bx = box.max.x - box.min.x,
-            by = box.max.y - box.min.y,
-            bz = box.max.z - box.min.z;
+       */
+        var light = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.9);
 
-        /*  setTimeout(() => {
-             boxs.children.forEach(node => {
-                 let position = node.geometry.boundingSphere.center
-                 addCube([position.x, position.z, position.y], node.geometry.boundingSphere
-                     .radius)
-             })
-         }) */
-        // cube.position.set(-bx / 2, -by / 2, -bz / 2);
-        /* boxs.position.set(bx / 2, by / 2, bz / 2);
-        scene.add(boxs) 
-        boxs.children.forEach((x)=>{ 
-        }) */
+        scene.add(light);
+
+        /*   var spotLight = new THREE.SpotLight(0xffffff);
+          spotLight.position.set(480, 500, -380);
+          scene.add(spotLight);
+        spotLight.intensity = 0.6;
+          spotLight.angle = 1.06;  */
+
+        /*   spotLight.shadowCameraNear = 1;
+          spotLight.shadowCameraFar = 5;
+          spotLight.shadowCameraFov = 11;
+          spotLight.shadowCameraVisible = true; 
+          spotLight.shadowMapWidth = 1024;
+          spotLight.shadowMapHeight = 1024;
+          spotLight.shadowDarkness = 0.3; */
+
+        // spotLight.castShadow = true;//开启灯光投射阴影
+        /* var spotLightHelper = new THREE.SpotLightHelper(spotLight);
+        scene.add(spotLightHelper); */
+    }
+
+    this.onSize = function () {
+
     }
     var optionsE = {
         depth: 20,
@@ -266,6 +220,7 @@ var initMap = function ({
         steps: 1,
     };
     var svgGroups = new THREE.Group();
+    var cityPositions = [];
     svgGroups.rotation.x = Math.PI / 2;
     svgGroups.position.y = 70;
     svgGroups.position.x = -10;
@@ -273,7 +228,6 @@ var initMap = function ({
     function reverse(c) { if (!THREE.ShapeUtils.isClockWise(c)) c = c.reverse(); }
     function getBevelVec(inPt, inPrev, inNext) {
         var v_trans_x, v_trans_y, shrink_by = 1;
-
         var v_prev_x = inPt.x - inPrev.x, v_prev_y = inPt.y - inPrev.y,
             v_next_x = inNext.x - inPt.x, v_next_y = inNext.y - inPt.y,
             v_prev_lensq = (v_prev_x * v_prev_x + v_prev_y * v_prev_y),
@@ -382,7 +336,7 @@ var initMap = function ({
         var draw_s = drawShape();
         var shapeGeo = new THREE.ExtrudeGeometry(draw_s, optionsE)
         shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-450, -300, 0));
-        var material = new THREE.MeshStandardMaterial({
+        var material = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color(sceneOptions.sceneStyle.blockColor),
             flatShading: THREE.FlatShading,
             // transparent: true,
@@ -390,6 +344,7 @@ var initMap = function ({
             opacity: 0.7
         });
         var shape = new THREE.Mesh(shapeGeo, material);
+        shape.receiveShadow = true;
         function drawShape() {
             var svgString = path
             var shape = transformSVGPathExposed(svgString);
@@ -399,7 +354,7 @@ var initMap = function ({
         // shape.position.z -= 1000
 
         svgGroups.add(shape);
-        svgShape.push(shape)
+        // svgShape.push(shape)
         shape.userData = {
             type: "path",
             ...properties,
@@ -441,7 +396,7 @@ var initMap = function ({
             var cloneLine = new THREE.Mesh(_lGeo, initCoffet.Line2);
             shape.add(cloneLine)
             // cloneLine.material.opacity = 0.2;
-            cloneLine.position.z = optionsE.depth;
+            cloneLine.position.z = optionsE.depth + 1;
             cloneLine.position.y -= setCenter.y;
             cloneLine.position.x -= setCenter.x;
         })
@@ -478,32 +433,115 @@ var initMap = function ({
 
         shape.add(sprite);
         // 添加动画
-        var plane = initCoffet.createAnimatePlane()
-        plane.name = "animatePlane";
-        shape.add(plane)
-        switch (properties.name) {
-            case "广东":
-                plane.position.set(pro[0], pro[1] - 15, -10);
-                break;
-            case "澳门":
-                plane.position.set(pro[0] - 10, pro[1] + 10, -10);
-                break;
-            case "香港":
-                plane.position.set(pro[0] + 10, pro[1] + 10, -10);
-                break;
-            default:
-                plane.position.set(pro[0], pro[1] + 5, -10);
+        /*  var plane = initCoffet.createAnimatePlane()
+         plane.name = "animatePlane";
+         shape.add(plane)
+         switch (properties.name) {
+             case "广东":
+                 plane.position.set(pro[0], pro[1] - 15, -10);
+                 break;
+             case "澳门":
+                 plane.position.set(pro[0] - 10, pro[1] + 10, -10);
+                 break;
+             case "香港":
+                 plane.position.set(pro[0] + 10, pro[1] + 10, -10);
+                 break;
+             default:
+                 plane.position.set(pro[0], pro[1] + 5, -10);
+         }
+ 
+         plane.userData = {
+         } */
+    }
+    this.addAttackPlane = function (position, type, time) {
+        type = type || 1;
+        time = time || 1000;
+        var geometry = new THREE.PlaneBufferGeometry(10, 10, 10);
+        var material = new THREE.MeshBasicMaterial({
+            map: _this.addPlaneImg,
+            transparent: true,
+            side: THREE.AdditiveBlending,
+            color: "#ff0000",
+            depthWrite: false,
+            opacity: 1
+        });
+        var plane = new THREE.Mesh(geometry, material);
+        plane.position.set(...position);
+        planeGroup.add(plane);
+        var anmiat = new TWEEN.Tween(plane.scale).to({ x: 5, y: 5, z: 5 }, time);
+        anmiat.start();
+        anmiat.onUpdate(function () {
+            plane.material.opacity = 1 / plane.scale.x + 0.5;
+            plane.material.needsUpdate = true;
+        })
+        anmiat.onComplete(function () {
+            _this.dispose(plane);
+        })
+    }
+    this.createAttack = function (options) {
+        //创建攻击
+        if (typeof options !== 'object') {
+            return;
         }
-
-        plane.userData = {
-        }
+        var src = options.src;
+        var dst = options.dst;
+        var curve = new THREE.CatmullRomCurve3(
+            [
+                new THREE.Vector3(src[0], src[1], src[2]),
+                new THREE.Vector3((src[0] + dst[0]) / 2, (src[1] + dst[1]) / 2,-60),
+                new THREE.Vector3(dst[0], dst[1], dst[2])
+            ]
+        );
+        var texture = new THREE.TextureLoader().load("./image/line.png");
+        var points = curve.getPoints(50);
+        var mesh_line = new MeshLineMaterial({
+            color: new THREE.Color("#ff0000"),
+            opacity: 1,
+            resolution: resolution,
+           /*   map: texture,
+            useMap: 1.0,    */
+            sizeAttenuation: 1,
+            lineWidth: 12,
+            near: 1,
+            far: 100000,
+            depthTest: false,
+            blending: THREE.AdditiveBlending,
+            transparent: false,
+            side: THREE.DoubleSide
+        })
+        var line = new MeshLine();
+        var geometry = new THREE.Geometry();
+        let lineNum = 20;
+        for (let i = 0; i < lineNum; i++) {
+            geometry.vertices.push(new THREE.Vector3(points[0].x, points[0].y, points[0].z));
+        }  
+        line.setGeometry(geometry, function (p) { return 1 - Math.cos(p); });
+        var mesh = new THREE.Mesh(line.geometry, mesh_line);
+        lineGroup.add(mesh);
+   
+        var index = 0 ;
+        var interval = setInterval(()=>{
+            if (index >= points.length*2){
+                clearInterval(interval);
+                _this.dispose(mesh);
+                return 
+            }
+            if (index < points.length){
+                var vec3 = points[index];
+                line.advance(new THREE.Vector3(vec3.x, vec3.y, vec3.z));
+            }else{
+                var vec3 = points[points.length - 1];
+                line.advance(new THREE.Vector3(vec3.x, vec3.y, vec3.z));
+            }
+            index++;
+        },30)
     }
     var initCoffet = {
         Line1: new THREE.ShaderMaterial({
             uniforms: {
                 u_color: { value: new THREE.Color(sceneOptions.sceneStyle.borderColor) },
                 u_opacity: { value: 0.8 },
-                u_width: { value: -1 },
+                u_width: { value: -2 },
             },
             transparent: true,
             side: THREE.DoubleSide,
@@ -515,7 +553,7 @@ var initMap = function ({
         Line2: new THREE.ShaderMaterial({
             uniforms: {
                 u_color: { value: new THREE.Color(sceneOptions.sceneStyle.borderColor) },
-                u_opacity: { value: 0.2 },
+                u_opacity: { value: 1 },
                 u_width: { value: -1 },
             },
             transparent: true,
@@ -615,11 +653,6 @@ var initMap = function ({
             bz = box.max.z - box.min.z;
     }
     this.initSvg = function () {
-        var whileArr = [7];
-        var series = testData.series;
-        var paths = document.querySelectorAll("path");
-
-
         _this.projection = d3.geoMercator().fitExtent([[0, 0], [width, height]], geo);
         // path
         var path = d3.geoPath().projection(_this.projection);
@@ -627,13 +660,13 @@ var initMap = function ({
         var svg = d3.select("#svg").append("svg");
         var svgGroup = svg.append('g');
         var svgps = []
-        var whileArr = [7];
         var allPath = svgGroup.selectAll("path")
             .data(geo.features)
             .enter()
             .append("path")
             .attr("d", (d, i) => {
                 // svgps.push(path(d)) 
+                cityPositions.push(d.properties);
                 initSvg(path(d), d.properties)
                 if (i == geo.features.length - 1) {
                 }
@@ -654,29 +687,22 @@ var initMap = function ({
             })
             setInterval(() => {
                 geo.features.forEach(x => {
+
                     svgGroups.traverse(child => {
                         if (x.properties.name === child.userData.name) {
                             var num = parseInt(Math.random() * 1000);
                             child.userData.currValue = child.userData.value;
                             child.userData.value += Math.random() < 0.6 ? 0 : ~~(Math.random() * 20);
-
                         }
                     })
                     if (Math.random() < 0.3) {
                         index++;
                         var t = typeAttack[index % (typeAttack.length - 1)]
                         _this.initTipes({ width: 128, height: 128, type: t, properties: x.properties }, function (mesh) {
-                            var detp = createjs.Tween.get(mesh.position, { override: true }).to({ z: -80 }, 2000, createjs.Ease.elasticInOut).call(function () {
-                                mesh.position.z += 2;
-                                setTimeout(function () {
-                                    _this.dispose(mesh);
-                                    tipsSprites.remove(mesh);
-                                    detp.removeAllEventListeners();
-                                    // console.log(detp)
-                                }, 500)
-                            })
-                            detp.addEventListener("change", function () {
-                                mesh.material.opacity = mesh.position.z / -80;
+                            var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
+                            tipsTween.start();
+                            tipsTween.onComplete(function () {
+                                _this.dispose(mesh);
                             })
 
                         })
@@ -697,6 +723,8 @@ var initMap = function ({
           }) */
     }
     var tipsSprites = new THREE.Group();
+    var planeGroup = new THREE.Group();
+    var lineGroup = new THREE.Group();
     var tipsSpritesArr = [];
     var urlImg = ""
     function initTipesCanvas({ width = 256, height = 64, type, icon }, callback) {
@@ -709,6 +737,7 @@ var initMap = function ({
         img.onload = function () {
             context.drawImage(img, 0, 0, width, height);
             typeof callback === 'function' ? callback(canvas) : null;
+            img = null;
         }
     }
     _this.initTipes = function ({ width = 256, height = 64, type, icon, properties }, callback) {
@@ -731,6 +760,7 @@ var initMap = function ({
             callback(spriteNumber);
             spriteNumber.scale.set(20, 20, 20)
             spriteNumber.position.set(position[0], position[1], 0);
+
 
         })
     }
@@ -775,12 +805,42 @@ var initMap = function ({
         this.init();
         this.initLight()
         this.controlsEvent(controls);
+        this.addPlaneImg = new THREE.TextureLoader().load('./image/p3.png');
         scene.add(svgGroups)
+        //attackPlane Group
+
         this.initSvg();
         // this.initGeo();
         render();
         svgGroups.add(tipsSprites)
-        _this.currCanvas.addEventListener("mouseup", onMouseUp)
+        svgGroups.add(planeGroup)
+        svgGroups.add(lineGroup)
+        // _this.currCanvas.addEventListener("mouseup", onMouseUp)
+
+
+        //模拟攻击 
+        var index = 0;
+        setTimeout(()=>{
+            var time = setInterval(() => {
+                if (index >= cityPositions.length) {
+                    index = 0;
+                }
+                var dst = projection(cityPositions[index].cp);
+                var src1 = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
+                var src = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
+                _this.addAttackPlane([...dst, -2], 1, 1000);
+                _this.createAttack({
+                    src: [...src, 0],
+                    dst: [...dst, 0]
+                }, 1);
+                _this.createAttack({
+                    src: [...src1, 0],
+                    dst: [...dst, 0]
+                }, 1);
+                index++
+            }, 300);
+        },3000)
+        // _this.addAttackPlane()
     }
     this.load();
     _this.dispose = function (mesh) {
@@ -793,7 +853,7 @@ var initMap = function ({
                 item.material.dispose(); //删除材质
             }
         });
-        mesh.remove();
+        if (mesh.parent) mesh.parent.remove(mesh);
     }
     function onMouseUp(event) {
         var canvas = _this.currCanvas;
@@ -851,7 +911,7 @@ var initMap = function ({
                         if (child.userData.value >= 100) {
                             node.userData.show = true
                         }
-                        if (node.userData.show) {
+                        /* if (node.userData.show) {
                             node.visible = true;
                             node.userData.process += 0.01;
                             var process = node.userData.process;
@@ -860,11 +920,11 @@ var initMap = function ({
                             if (process >= 1) {
                                 node.userData.process = 0;
                                 // node.userData.show = false;
-                                node.userData.show = Math.random() > 0.9? true : false;
+                                node.userData.show = Math.random() > 0.9 ? true : false;
                             }
                         } else {
                             node.visible = false;
-                        }
+                        } */
                     })
                 }
             })
@@ -887,6 +947,7 @@ var initMap = function ({
         if (stats) stats.update();
         renderer.render(scene, camera);
         requestAnimationFrame(render);
+        if (TWEEN) TWEEN.update();
         animatePlanes()
     }
 
