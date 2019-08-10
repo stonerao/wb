@@ -504,8 +504,7 @@ var initMap = function ({
             lineWidth: 12,
             near: 1,
             far: 100000,
-            depthTest: false,
-            blending: THREE.AdditiveBlending,
+            depthTest: false, 
             transparent: false,
             side: THREE.DoubleSide
         })
