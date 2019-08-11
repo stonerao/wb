@@ -28,7 +28,9 @@ var attackList = [...new Array(8)].map((elem, index) => {
         ip: "255.255.255.255",
         type: "设置ACK和RST标志位的dos攻击",
         address: "四川省 达州市",
-        date: "2019-7-24 21:31:36"
+        date: "2019-7-24 21:31:36",
+        src: "四川",
+        dst: "上海"
     }
 })
 var VM = new Vue({
@@ -54,12 +56,15 @@ var VM = new Vue({
                 value: 54021
             }
         ],
-        attackList: attackList
+        attackList: attackList,
+        currAdr: null,
+        cityLevel: 1
     },
     components: {
         cbox: box
     },
     mounted() {
+        let _this = this;
         document.querySelector(".l-loding").remove()
         var names = [
             '待选项的IP包（一）',
@@ -95,7 +100,7 @@ var VM = new Vue({
                 value: parseInt(Math.random() * 2500)
             }
         })
-        var attackEvent = new initBarList({
+        var dailyEvent = new initBarList({
             id: "daily",
             data: dailyDatas,
             color: "#ff8d36",
@@ -103,12 +108,64 @@ var VM = new Vue({
         })
         /* map */
         var dom = document.getElementById("map");
+        this.currAdr = "china";
+        this.cityLevel = 1;
+
+
         var map = new initMap({
             geo: china,
-            dom: dom
+            dom: dom,
+            click: function (res) {
+                if (res === false && _this.cityLevel === 2) {
+                    //点击空白 
+                    _this.cityLevel = 1;
+                    map.createMap({
+                        geo: china
+                    })
+                } else if (_this.cityLevel === 1 && res !== false) {
+                    _this.getJson(res.id, function (data) {
+                        map.createMap({
+                            geo: data
+                        })
+                    })
+                }
+            }
         })
-        window.addEventListener("resize",()=>{
-            map.onSize()
+
+        window.addEventListener("resize", function () {
+            map.resize();//地图resize event
+            eventType.resize();
+            attackEvent.resize();
+            dailyEvent.resize();
         })
+        /*  setTimeout(() => {
+             this.getJson(`sichuan`, function (data) {
+                 map.createMap({
+                     geo: data
+                 })
+             })
+ 
+         }, 5000) */
+    },
+    methods: {
+        getJson(city, callback) {
+            var cityName = "";
+            switch (city) {
+                case "sichuan":
+                    cityName = "si_chuan_geo";
+                    break
+            }
+            console.log(city)
+            if (!city) {
+                return false
+            }
+            this.currAdr = city;
+            this.cityLevel = 2;
+            axios(`./geoJson/${city}_geo.json`).then(res => {
+                var data = res.data;
+                typeof callback === 'function' ? callback(data) : false;
+            })
+        },
+
     }
 })

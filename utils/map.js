@@ -1,5 +1,5 @@
 var initMap = function ({
-    geo, dom, svg
+    geo, dom, svg, click
 }) {
     //生成地图
     var _this = this;
@@ -149,6 +149,7 @@ var initMap = function ({
         var cube = new THREE.Mesh(geometry, material);
         scene.add(cube);
     }
+
     this.controlsEvent = function ({
         autoRotate,
         autoRotateSpeed,
@@ -207,8 +208,12 @@ var initMap = function ({
         scene.add(spotLightHelper); */
     }
 
-    this.onSize = function () {
-
+    this.resize = function () {
+        width = _this.currDom.clientWidth;
+        height = _this.currDom.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
     }
     var optionsE = {
         depth: 20,
@@ -223,7 +228,7 @@ var initMap = function ({
     var cityPositions = [];
     svgGroups.rotation.x = Math.PI / 2;
     svgGroups.position.y = 70;
-    svgGroups.position.x = -10;
+    svgGroups.position.x = 0;
     svgGroups.position.z = -90;
     function reverse(c) { if (!THREE.ShapeUtils.isClockWise(c)) c = c.reverse(); }
     function getBevelVec(inPt, inPrev, inNext) {
@@ -328,14 +333,13 @@ var initMap = function ({
         bgeo.addAttribute('cRatio', new THREE.Float32BufferAttribute(ratios, 1));
         bgeo.addAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         bgeo.addAttribute('cPosition', new THREE.Float32BufferAttribute(positions2, 3));
-
         return bgeo;
     }
     function initSvg(path, properties) {
         //生成地图
         var draw_s = drawShape();
         var shapeGeo = new THREE.ExtrudeGeometry(draw_s, optionsE)
-        shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-450, -300, 0));
+        shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-width / 2, -height / 2, 0));
         var material = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color(sceneOptions.sceneStyle.blockColor),
             flatShading: THREE.FlatShading,
@@ -353,8 +357,8 @@ var initMap = function ({
         }
         // shape.position.z -= 1000
 
-        svgGroups.add(shape);
-        // svgShape.push(shape)
+        shapeGroup.add(shape);
+        svgShape.push(shape)
         shape.userData = {
             type: "path",
             ...properties,
@@ -372,8 +376,8 @@ var initMap = function ({
 
         // 偏移
         var setCenter = {
-            x: (width - 68) / 2,
-            y: (height - 106) / 2
+            x: width / 2,
+            y: height / 2
         }
         draw_s.forEach(elem => {
             var contour = elem.getPoints(6);
@@ -394,15 +398,15 @@ var initMap = function ({
             line.position.z = -2;
             shape.add(line);
             var cloneLine = new THREE.Mesh(_lGeo, initCoffet.Line2);
-            shape.add(cloneLine)
-            // cloneLine.material.opacity = 0.2;
-            cloneLine.position.z = optionsE.depth + 1;
-            cloneLine.position.y -= setCenter.y;
+            shape.add(cloneLine) 
             cloneLine.position.x -= setCenter.x;
+            cloneLine.position.y -= setCenter.y;
+            cloneLine.position.z = optionsE.depth;
         })
+
         // 生成地区名字
         var cityNameCtx = addCityName({
-            width: 128,
+            width: 256,
             height: 64,
             text: properties.name,
             color: "#ffffff"
@@ -416,7 +420,7 @@ var initMap = function ({
             opacity: 1
         });
         var sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(36, 18);
+        sprite.scale.set(72, 18);
         switch (properties.name) {
             case "广东":
                 sprite.position.set(pro[0], pro[1] - 25, -15)
@@ -488,7 +492,7 @@ var initMap = function ({
         var curve = new THREE.CatmullRomCurve3(
             [
                 new THREE.Vector3(src[0], src[1], src[2]),
-                new THREE.Vector3((src[0] + dst[0]) / 2, (src[1] + dst[1]) / 2,-60),
+                new THREE.Vector3((src[0] + dst[0]) / 2, (src[1] + dst[1]) / 2, -60),
                 new THREE.Vector3(dst[0], dst[1], dst[2])
             ]
         );
@@ -498,42 +502,43 @@ var initMap = function ({
             color: new THREE.Color("#ff0000"),
             opacity: 1,
             resolution: resolution,
-           /*   map: texture,
-            useMap: 1.0,    */
+            /*     map: texture,
+                useMap: 1.0, */
             sizeAttenuation: 1,
             lineWidth: 12,
             near: 1,
             far: 100000,
-            depthTest: false, 
-            transparent: false,
-            side: THREE.DoubleSide
+            depthTest: false,
+            transparent: true,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending
         })
         var line = new MeshLine();
         var geometry = new THREE.Geometry();
         let lineNum = 20;
         for (let i = 0; i < lineNum; i++) {
             geometry.vertices.push(new THREE.Vector3(points[0].x, points[0].y, points[0].z));
-        }  
+        }
         line.setGeometry(geometry, function (p) { return 1 - Math.cos(p); });
         var mesh = new THREE.Mesh(line.geometry, mesh_line);
         lineGroup.add(mesh);
-   
-        var index = 0 ;
-        var interval = setInterval(()=>{
-            if (index >= points.length*2){
+
+        var index = 0;
+        var interval = setInterval(() => {
+            if (index >= points.length * 2) {
                 clearInterval(interval);
                 _this.dispose(mesh);
-                return 
+                return
             }
-            if (index < points.length){
+            if (index < points.length) {
                 var vec3 = points[index];
                 line.advance(new THREE.Vector3(vec3.x, vec3.y, vec3.z));
-            }else{
+            } else {
                 var vec3 = points[points.length - 1];
                 line.advance(new THREE.Vector3(vec3.x, vec3.y, vec3.z));
             }
             index++;
-        },30)
+        }, 30)
     }
     var initCoffet = {
         Line1: new THREE.ShaderMaterial({
@@ -642,7 +647,6 @@ var initMap = function ({
     // 根据值设置城市颜色
     this.setCityHeightTop = function (position, nextZ) {
         createjs.Tween.get(position, { override: true }).to({ z: nextZ }, 200, createjs.Ease.linear)
-
     }
     this.initSvgBox = function () {
         var boxs = new THREE.Group();
@@ -651,14 +655,28 @@ var initMap = function ({
             by = box.max.y - box.min.y,
             bz = box.max.z - box.min.z;
     }
-    this.initSvg = function () {
+    this.allGroupShow  = function(state){
+        tipsSprites.visible = state;
+        planeGroup.visible = state;
+        lineGroup.visible = state; 
+    }
+    this.createMap = function ({ geo }) {
+        //先清空 
+        this.allGroupShow(false)
+        this.disposeScene();
+        setTimeout(() => {
+            this.initSvg(geo);
+        }, 1000)
+    }
+    this.initSvg = function (geo = []) {
         _this.projection = d3.geoMercator().fitExtent([[0, 0], [width, height]], geo);
         // path
         var path = d3.geoPath().projection(_this.projection);
         // var svg = d3.select(document.createElement("svg"));
+        d3.select("#svg").selectAll('svg').remove();
         var svg = d3.select("#svg").append("svg");
         var svgGroup = svg.append('g');
-        var svgps = []
+        var svgps = [];
         var allPath = svgGroup.selectAll("path")
             .data(geo.features)
             .enter()
@@ -676,9 +694,10 @@ var initMap = function ({
             .attr("fill", function (d, i) {
                 return "#fff0";
             })
+        this.allGroupShow(true)
         var index = 0;
         var typeAttack = ['2-1-1', '2-2-4', '2-2-5', '2-3-1', '2-3-2']
-        setTimeout(() => {
+        /* setTimeout(() => {
             svgGroups.traverse(child => {
                 var num = parseInt(Math.random() * 100);
                 child.userData.currValue = num
@@ -709,7 +728,7 @@ var initMap = function ({
                 })
 
             }, 1000)
-        }, 3000)
+        }, 3000) */
         /*   geo.features.forEach((path, i) => {
               var pos = projection(path.properties.cp);
               var geometry = new THREE.BoxGeometry(5, 5, 111);
@@ -724,6 +743,7 @@ var initMap = function ({
     var tipsSprites = new THREE.Group();
     var planeGroup = new THREE.Group();
     var lineGroup = new THREE.Group();
+    var shapeGroup = new THREE.Group();
     var tipsSpritesArr = [];
     var urlImg = ""
     function initTipesCanvas({ width = 256, height = 64, type, icon }, callback) {
@@ -765,7 +785,7 @@ var initMap = function ({
     }
     function projection(arr) {
         var pos = _this.projection(arr);
-        pos = [pos[0] - (width - 68) / 2, pos[1] - (height - 106) / 2];
+        pos = [pos[0] - width / 2, pos[1] - height / 2];
         return pos
     }
     function addCityName({ width = 256, height = 32, text = "", color = "#ffba47" }) {
@@ -808,18 +828,18 @@ var initMap = function ({
         scene.add(svgGroups)
         //attackPlane Group
 
-        this.initSvg();
+        this.initSvg(geo);
         // this.initGeo();
         render();
         svgGroups.add(tipsSprites)
         svgGroups.add(planeGroup)
         svgGroups.add(lineGroup)
-        // _this.currCanvas.addEventListener("mouseup", onMouseUp)
-
+        svgGroups.add(shapeGroup)
+        _this.currCanvas.addEventListener("mouseup", onMouseUp)
 
         //模拟攻击 
         var index = 0;
-        setTimeout(()=>{
+        setTimeout(() => {
             var time = setInterval(() => {
                 if (index >= cityPositions.length) {
                     index = 0;
@@ -838,21 +858,49 @@ var initMap = function ({
                 }, 1);
                 index++
             }, 300);
-        },3000)
+        }, 3000)
         // _this.addAttackPlane()
     }
     this.load();
+    _this.disposeScene = function () {
+        //清除所有的  
+        _this.disposeGroup(tipsSprites)
+        _this.disposeGroup(planeGroup )
+        _this.disposeGroup(lineGroup  )
+        _this.disposeGroup(shapeGroup )
+
+        /* svgGroups.children.traverse(function (child) {
+            if (child.type === "Group") {
+                _this.disposeMesh(child)
+            }
+        }) */
+    }
+    _this.disposeGroup = function (group) {
+        //递归删除所有children
+        for (var i = group.children.length - 1; i >= 0; i--) {
+            _this.disposeMesh(group.children[i]);
+        }
+    }
     _this.dispose = function (mesh) {
         /* 删除模型 */
-        mesh.traverse(function (item) {
-            if (item.geometry) {
-                item.geometry.dispose(); //删除几何体
+        _this.disposeMesh(mesh);
+    }
+    _this.disposeMesh = function (mesh) {
+        var meshLen = mesh.children.length;
+        if (meshLen.length > 0) {
+            //递归删除所有children
+            for (var i = meshLen.length - 1; i >= 0; i--) {
+                _this.disposeMesh(mesh.children[i]);
             }
-            if (item.material) {
-                item.material.dispose(); //删除材质
-            }
-        });
-        if (mesh.parent) mesh.parent.remove(mesh);
+        }
+
+        if (mesh.material) {
+            mesh.material.dispose(); //删除材质
+        }
+        if (mesh.geometry) {
+            mesh.geometry.dispose(); //删除几何体
+        }
+        mesh.parent && mesh.parent.remove(mesh);
     }
     function onMouseUp(event) {
         var canvas = _this.currCanvas;
@@ -864,12 +912,17 @@ var initMap = function ({
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(svgShape);
         if (intersects.length > 0) {
+            var obj = intersects[0].object;
+            var data = obj.userData;
+            typeof click == 'function' ? click(data) : null;
+        }else{
+            click(false)
         }
     }
     var MaxNumber = 1000;//最大值
     var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#9ce0d4']
     function animatePlanes() {
-        svgGroups.children.forEach(child => {
+        shapeGroup.children.forEach(child => {
             // 改变值 
             if (child.userData.currValue !== child.userData.value) {
                 for (var i = child.children.length - 1; i >= 0; i--) {

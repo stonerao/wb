@@ -127,8 +127,11 @@ function initBarList({
     var option = returnOption(xdata, ydata)
     var myChart = echarts.init(document.getElementById(id));
     myChart.setOption(option);
-    this.update = function(){
-        
+    this.update = function () {
+
+    }
+    this.resize = function () {
+        myChart.resize();
     }
 }
 function initLineList({
@@ -164,7 +167,7 @@ function initLineList({
                 }
             },
             grid: {
-                top:15,
+                top: 15,
                 left: '3%',
                 right: '4%',
                 bottom: '3%',
@@ -177,7 +180,7 @@ function initLineList({
                     lineStyle: {
                         color: '#fff'
                     }
-                }, 
+                },
                 data: ['13:00', '13:05', '13:10', '13:15', '13:20', '13:25', '13:30', '13:35']
             }],
             yAxis: [{
@@ -200,7 +203,7 @@ function initLineList({
                 splitLine: {
                     lineStyle: {
                         color: '#18304f',
-                        type:"dashed"
+                        type: "dashed"
                     }
                 }
             }],
@@ -250,4 +253,7 @@ function initLineList({
     var option = returnOption()
     var myChart = echarts.init(document.getElementById(id));
     myChart.setOption(option);
+    this.resize = function () {
+        myChart.resize();
+    }
 }
