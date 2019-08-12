@@ -136,8 +136,8 @@
         <!-- header -->
         <div class="g-header">
             <div class="g-header-title">{{title}}</div>
-            <div class="g-header-time">
-                2019-7-21 11:52:08
+            <div class="g-header-time" v-html="date">
+                
             </div>
         </div>
         <!-- main -->
@@ -216,7 +216,7 @@
             <!-- right -->
             <div class="g-right">
                 <div class="relative" style="height:350px">
-                    <cbox title="每日TOP5">
+                    <cbox title="攻击来源TOP5">
                         <div class="g-full" slot="main" id="daily"></div>
                     </cbox>
                 </div>

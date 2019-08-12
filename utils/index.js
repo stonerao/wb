@@ -20,6 +20,13 @@ var box = {
         title: String
     }
 }
+axios.interceptors.response.use(res => {
+    const result = res || {}
+    if (result.status === 200) {
+        return result.data
+    }
+
+})
 var attackList = [...new Array(8)].map((elem, index) => {
     return {
         id: index + 1,
@@ -33,6 +40,14 @@ var attackList = [...new Array(8)].map((elem, index) => {
         dst: "上海"
     }
 })
+const url = "/SOC/webclient/api";
+const ref = {
+    date: url + "/ss/server/info",
+    eventType: url + "/ss/eventdatas/",// /ss/eventdatas/{size}
+    attackType: url + "/ss/eventdataStatCategory/",// {day}
+    attackProvince: url + "/ss/eventdataStatProvince/",// {day}
+    dailyStat: url + "/ss/dailyStat/",
+}
 var VM = new Vue({
     el: "#app",
     data: {
@@ -58,7 +73,11 @@ var VM = new Vue({
         ],
         attackList: attackList,
         currAdr: null,
-        cityLevel: 1
+        cityLevel: 1,
+        date: "",
+        chartEventType: null,
+        chartDayTop5: null,
+        chartAttackEvent: null
     },
     components: {
         cbox: box
@@ -84,13 +103,13 @@ var VM = new Vue({
                 value: parseInt(Math.random() * 2500)
             }
         })
-        var eventType = new initBarList({
+        this.chartEventType = new initBarList({
             id: "eventType",
             data: datas,
             color: "#4081ff",
             dstColor: "#65bef5"
         })
-        var attackEvent = new initLineList({
+        this.chartAttackEvent = new initLineList({
             id: "attackEvent",
             data: datas
         })
@@ -100,7 +119,7 @@ var VM = new Vue({
                 value: parseInt(Math.random() * 2500)
             }
         })
-        var dailyEvent = new initBarList({
+        this.chartDayTop5 = new initBarList({
             id: "daily",
             data: dailyDatas,
             color: "#ff8d36",
@@ -116,6 +135,7 @@ var VM = new Vue({
             geo: china,
             dom: dom,
             click: function (res) {
+                return
                 if (res === false && _this.cityLevel === 2) {
                     //点击空白 
                     _this.cityLevel = 1;
@@ -146,6 +166,21 @@ var VM = new Vue({
              })
  
          }, 5000) */
+
+        //dete
+        this.getDate();
+        setInterval(() => {
+            this.getDate();
+        }, 50000)
+
+        //安全事件
+        //中下方
+        this.getEventType();
+
+        // 左上方
+        this.getAttackType(7);
+        this.getAttackProvince(7);
+        this.getDailyStat(7);
     },
     methods: {
         getJson(city, callback) {
@@ -155,7 +190,6 @@ var VM = new Vue({
                     cityName = "si_chuan_geo";
                     break
             }
-            console.log(city)
             if (!city) {
                 return false
             }
@@ -166,6 +200,86 @@ var VM = new Vue({
                 typeof callback === 'function' ? callback(data) : false;
             })
         },
+        getDate() {
+            axios(ref.date).then(res => {
+                if (res.success) {
+                    res.realtime
+                    const date = new Date(res.realtime);
+                    this.date = GetCurrentDate(date);
+                }
+            })
+        },
+        getEventType(size = 10) {
+            axios(ref.eventType + size).then(res => {
+                if (res.success) {
+                    const data = res.data;
 
+                }
+            })
+        },
+        getAttackType(day = 7) {
+            axios(ref.attackType + day).then(res => {
+                if (res.success) {
+                    let data = res.data;
+                    const spliceLen = 12;
+                    if (data.length > spliceLen) {
+                        data.splice(spliceLen)
+                    }
+                    const items = data.map(elem => ({
+                        value: elem.total,
+                        name: elem.eventCategory.name
+                    }))
+                    this.chartEventType.update(items)
+                }
+            })
+        },
+        getAttackProvince(day = 7) {
+            axios(ref.attackProvince + day).then(res => {
+                if (res.success) {
+                    let data = res.data; 
+                    const spliceLen = 5;
+                    if (data.length > spliceLen) {
+                        data.splice(spliceLen)
+                    }
+                    const items = data.map(elem => ({
+                        value: elem.total,
+                        name: elem.province
+                    }))
+                    this.chartDayTop5.update(items)
+                }
+            })
+        },
+        getDailyStat(day=7){
+            axios(ref.dailyStat + day).then(res => {
+                if (res.success) {
+                    let data = res.data;
+                    // const spliceLen = 5;
+                    // if (data.length > spliceLen) {
+                    //     data.splice(spliceLen)
+                    // }
+                    const items = data.map(elem => ({
+                        value: elem.total,
+                        name: GetCurrentDate(new Date(elem.stateDate))
+                    }))
+                    this.chartAttackEvent.update(items)
+                }
+            })
+        }
     }
 })
+function GetCurrentDate(date) {
+    var y = date.getYear() + 1900;
+    var month = add_zero(date.getMonth() + 1),
+        days = add_zero(date.getDate()),
+        hours = add_zero(date.getHours());
+    var minutes = add_zero(date.getMinutes()),
+        seconds = add_zero(date.getSeconds());
+    var str = y + '-' + month + '-' + days + ' ' + hours + ':' + minutes + ':' + seconds;
+    function add_zero(temp) {
+        if (temp < 10) {
+            return "0" + temp;
+        }
+        return temp;
+    }
+    return str;
+}

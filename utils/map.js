@@ -697,7 +697,7 @@ var initMap = function ({
         this.allGroupShow(true)
         var index = 0;
         var typeAttack = ['2-1-1', '2-2-4', '2-2-5', '2-3-1', '2-3-2']
-        /* setTimeout(() => {
+         setTimeout(() => {
             svgGroups.traverse(child => {
                 var num = parseInt(Math.random() * 100);
                 child.userData.currValue = num
@@ -728,7 +728,7 @@ var initMap = function ({
                 })
 
             }, 1000)
-        }, 3000) */
+        }, 3000)  
         /*   geo.features.forEach((path, i) => {
               var pos = projection(path.properties.cp);
               var geometry = new THREE.BoxGeometry(5, 5, 111);

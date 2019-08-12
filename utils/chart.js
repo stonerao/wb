@@ -127,8 +127,19 @@ function initBarList({
     var option = returnOption(xdata, ydata)
     var myChart = echarts.init(document.getElementById(id));
     myChart.setOption(option);
-    this.update = function () {
-
+    this.update = function (data) {
+        var xdata = [];
+        var ydata = [];
+        var values = data.sort((a, b) => {
+            return a.value - b.value
+        })
+        for (let i = 0; i < values.length; i++) {
+            var elem = values[i];
+            xdata.push(elem.value);
+            if (elem.name) ydata.push(elem.name);
+        }
+        var option = returnOption(xdata, ydata);
+        myChart.setOption(option);
     }
     this.resize = function () {
         myChart.resize();
@@ -144,6 +155,11 @@ function initLineList({
      */
     function returnOption(data) {
         data = data || [];
+        let values=[],names=[];
+        data.forEach(elem=>{
+            values.push(elem.value);
+            names.push(elem.name);
+        })
         return {
             backgroundColor: 'transparent',
 
@@ -181,7 +197,7 @@ function initLineList({
                         color: '#fff'
                     }
                 },
-                data: ['13:00', '13:05', '13:10', '13:15', '13:20', '13:25', '13:30', '13:35']
+                data: names
             }],
             yAxis: [{
                 type: 'value',
@@ -246,14 +262,19 @@ function initLineList({
                         borderWidth: 10
                     }
                 },
-                data: [23, 100, 191, 134, 150, 120, 110, 125]
+                data: values
             }]
         }
     }
-    var option = returnOption()
+    var option = returnOption(data)
     var myChart = echarts.init(document.getElementById(id));
     myChart.setOption(option);
     this.resize = function () {
         myChart.resize();
+    }
+    this.update=function(data){
+        console.log(data)
+        var option = returnOption(data);
+        myChart.setOption(option);
     }
 }
