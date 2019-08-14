@@ -11,9 +11,11 @@
     font-family: arial, 'Microsoft Yahei', '微软雅黑';
     color: #fff;
 }
-#svg{
+
+#svg {
     display: none;
 }
+
 /* hader */
 .g-header {
     height: 80px;
@@ -243,8 +245,9 @@
 .g-select:hover .g-selectlist {
     display: block;
 }
-.g-select:hover  img{
-   transform: rotate(180deg);
+
+.g-select:hover img {
+    transform: rotate(180deg);
 }
 
 .g-select span {
@@ -357,13 +360,24 @@
 .g-at-ac3 {
     opacity: 0.8;
 }
-.g-emap{
+
+.g-emap {
     position: relative;
 }
-.gmap{
+
+.gmap {
     position: absolute;
-    left:-25px;
-    top:-10px;
-    right:-25px;
-    bottom:0;
+    left: -25px;
+    top: -10px;
+    right: -25px;
+    bottom: 0;
+}
+
+.text-over {
+    overflow: hidden;
+    /*超出部分隐藏*/
+    text-overflow: ellipsis;
+    /* 超出部分显示省略号 */
+    white-space: nowrap;
+    /*规定段落中的文本不进行换行 */
 }

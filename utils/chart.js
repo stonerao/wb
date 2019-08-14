@@ -273,7 +273,6 @@ function initLineList({
         myChart.resize();
     }
     this.update=function(data){
-        console.log(data)
         var option = returnOption(data);
         myChart.setOption(option);
     }

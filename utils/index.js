@@ -46,7 +46,9 @@ const ref = {
     eventType: url + "/ss/eventdatas/",// /ss/eventdatas/{size}
     attackType: url + "/ss/eventdataStatCategory/",// {day}
     attackProvince: url + "/ss/eventdataStatProvince/",// {day}
-    dailyStat: url + "/ss/dailyStat/",
+    dailyStat: url + "/ss/dailyStat/",// {day}
+    eventDataDevice: url + "/ss/eventdataStatDeviceType/",// {day}
+    eventDataCity: url + "/ss/eventdataStatCity/",//{days}?provinceId={provinceId}
 }
 var VM = new Vue({
     el: "#app",
@@ -74,10 +76,13 @@ var VM = new Vue({
         attackList: attackList,
         currAdr: null,
         cityLevel: 1,
+        selectDay: 7,
         date: "",
         chartEventType: null,
         chartDayTop5: null,
-        chartAttackEvent: null
+        chartAttackEvent: null,
+        provinceId: "",
+        map:null
     },
     components: {
         cbox: box
@@ -131,7 +136,7 @@ var VM = new Vue({
         this.cityLevel = 1;
 
 
-        var map = new initMap({
+        this.map = new initMap({
             geo: china,
             dom: dom,
             click: function (res) {
@@ -153,7 +158,7 @@ var VM = new Vue({
         })
 
         window.addEventListener("resize", function () {
-            map.resize();//地图resize event
+            _this.map.resize();//地图resize event
             eventType.resize();
             attackEvent.resize();
             dailyEvent.resize();
@@ -178,11 +183,15 @@ var VM = new Vue({
         this.getEventType();
 
         // 左上方
-        this.getAttackType(7);
-        this.getAttackProvince(7);
-        this.getDailyStat(7);
+        this.selectEvent();
     },
     methods: {
+        selectEvent() {
+            this.getAttackType(this.selectDay);
+            this.getAttackProvince(this.selectDay);
+            this.getDailyStat(this.selectDay);
+            // this.getDeviceData(this.selectDay);
+        },
         getJson(city, callback) {
             var cityName = "";
             switch (city) {
@@ -213,7 +222,40 @@ var VM = new Vue({
             axios(ref.eventType + size).then(res => {
                 if (res.success) {
                     const data = res.data;
+                    /* 
+                    {
+                        id: index + 1,
+                        vin: "LS5A3ADE0AB046791",
+                        code: "421Ads",
+                        ip: "255.255.255.255",
+                        type: "设置ACK和RST标志位的dos攻击",
+                        address: "四川省 达州市",
+                        date: "2019-7-24 21:31:36",
+                        src: "四川",
+                        dst: "上海"
+                    } 
+                    */
+                    this.attackList = data.map(function (elem, index) {
+                        var content = "";
+                        try {
+                            content = JSON.parse(elem.content);
+                        } catch (err) {
+                            content = elem.content;
+                        }
+                        return {
+                            id: index++,
+                            vin: elem.vehicleId,
+                            code: elem.code,
+                            ip: typeof content === 'object' ? content.src_ip : '-',
+                            type: elem.name,
+                            address: elem.province + " " + elem.city,
+                            date: GetCurrentDate(new Date(elem.eventTime)),
+                            src: "",
+                            dst: "",
+                            content: content
 
+                        }
+                    })
                 }
             })
         },
@@ -236,7 +278,9 @@ var VM = new Vue({
         getAttackProvince(day = 7) {
             axios(ref.attackProvince + day).then(res => {
                 if (res.success) {
-                    let data = res.data; 
+                    let data = res.data;
+                    let cloneData = JSON.parse(JSON.stringify(data));
+                    // top5
                     const spliceLen = 5;
                     if (data.length > spliceLen) {
                         data.splice(spliceLen)
@@ -245,23 +289,77 @@ var VM = new Vue({
                         value: elem.total,
                         name: elem.province
                     }))
-                    this.chartDayTop5.update(items)
+                    this.chartDayTop5.update(items);
+                    //地图数据 
+                   setTimeout(()=>{
+                       this.map.update(cloneData)
+                   },2000)
                 }
             })
         },
-        getDailyStat(day=7){
+        getDailyStat(day = 7) {
             axios(ref.dailyStat + day).then(res => {
                 if (res.success) {
+                    var newEvent = [];//新增事件
+                    var newCar = [];//新增车辆
+                    var cartTotal = [];//车辆累计总数
+                    var eventTotal = [];//车辆总数
+                    // 0 今日事件新增；1 今日车辆新增；2 车辆累计总数；3 事件累计总数
                     let data = res.data;
                     // const spliceLen = 5;
                     // if (data.length > spliceLen) {
                     //     data.splice(spliceLen)
                     // }
-                    const items = data.map(elem => ({
-                        value: elem.total,
-                        name: GetCurrentDate(new Date(elem.stateDate))
-                    }))
-                    this.chartAttackEvent.update(items)
+                    for (var i = 0; i < data.length; i++) {
+                        var elem = data[i];
+                        switch (parseInt(elem.type)) {
+                            case 0:
+                                newEvent.push({
+                                    value: elem.total,
+                                    name: GetCurrentDate(new Date(elem.stateDate))
+                                })
+                                break;
+                            case 1:
+                                newCar.push({
+                                    value: elem.total,
+                                    name: GetCurrentDate(new Date(elem.stateDate))
+                                })
+                                break;
+                            case 2:
+                                cartTotal.push({
+                                    value: elem.total,
+                                    name: GetCurrentDate(new Date(elem.stateDate))
+                                })
+                                break;
+                            case 3:
+                                eventTotal.push({
+                                    value: elem.total,
+                                    name: GetCurrentDate(new Date(elem.stateDate))
+                                })
+                                break;
+                        }
+                    }
+
+                    this.chartAttackEvent.update(newEvent)
+                }
+            })
+        },
+        getDeviceData(day = 7) {
+            //获取设备数据
+            axios(ref.eventDataDevice + day).then(res => {
+                if (res.success) {
+                    let data = res.data;
+                    console.log(data)
+                }
+            })
+        },
+        getCityData(day = 7, provinceId) {
+            axios(ref.eventDataCity + day, {
+                provinceId: provinceId
+            }).then(res => {
+                if (res.success) {
+                    let data = res.data;
+                    console.log(data)
                 }
             })
         }

@@ -103,7 +103,7 @@
     <link rel="stylesheet" href="./styles/index.css">
     <script src="./libs/echarts.min.js"></script>
     <script src="./libs/d3.min.js"></script>
-    <script src="./libs/three.min.js"></script> 
+    <script src="./libs/three.min.js"></script>
     <script src="./js/controls/OrbitControls.js"></script>
     <script src="./js/utils/SceneUtils.js"></script>
     <script src="./libs/d3-threeD.js"></script>
@@ -119,7 +119,7 @@
 </head>
 
 <body>
-    
+
     <div class="l-loding">
         <div class="loadEffect">
             <span></span>
@@ -137,7 +137,7 @@
         <div class="g-header">
             <div class="g-header-title">{{title}}</div>
             <div class="g-header-time" v-html="date">
-                
+
             </div>
         </div>
         <!-- main -->
@@ -197,7 +197,9 @@
                                     <tr v-for="(item,index) in attackList"
                                         :class="index==attackList.length-1?'g-at-ac3':'g-at-ac'+index%4" :key="item.id">
                                         <td v-html="item.id"></td>
-                                        <td v-html="item.vin"></td>
+                                        <td>
+                                            <span class="text-over" style="width:130px;display: inline-block;overflow: hidden;" v-html="item.vin"></span>
+                                        </td>
                                         <td v-html="item.code"></td>
                                         <td v-html="item.ip"></td>
                                         <td v-html="item.type"></td>

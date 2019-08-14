@@ -5,6 +5,7 @@ var initMap = function ({
     var _this = this;
     var scene, camera, controls, renderer;
     var transformControl, stats;
+    var currData = [];
     var width, height;
     this.currDom = dom;
     this.currCanvas = null;
@@ -17,6 +18,7 @@ var initMap = function ({
     var groups = [];
     var svgShape = [];
     var currMesh = null;
+    currData = geo;
     var cameraOption = {/*  */
         position: {
             x: -3.884992521293494,
@@ -215,6 +217,27 @@ var initMap = function ({
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);
     }
+    this.update = function (data) {
+        currData.features.forEach(function (elem) {
+            data.forEach(function (d) {
+                if (d.province.indexOf(elem.properties.name) !== -1) {
+                    elem.properties.pid = d.id;
+                    elem.properties.province = d.province;
+                    elem.properties.stateDate = d.stateDate;
+                    elem.properties.total = d.total;
+                    //找到对比
+                    shapeGroup.children.forEach(function (om) {
+                        if (om.userData.name === elem.properties.name) {
+                            om.userData.currValue = 0;
+                            om.userData.value = d.total;
+                            _this.updateVal(om)
+                        }
+                    })
+                }
+            })
+        })
+
+    }
     var optionsE = {
         depth: 20,
         bevelThickness: 0,
@@ -398,7 +421,7 @@ var initMap = function ({
             line.position.z = -2;
             shape.add(line);
             var cloneLine = new THREE.Mesh(_lGeo, initCoffet.Line2);
-            shape.add(cloneLine) 
+            shape.add(cloneLine)
             cloneLine.position.x -= setCenter.x;
             cloneLine.position.y -= setCenter.y;
             cloneLine.position.z = optionsE.depth;
@@ -655,13 +678,14 @@ var initMap = function ({
             by = box.max.y - box.min.y,
             bz = box.max.z - box.min.z;
     }
-    this.allGroupShow  = function(state){
+    this.allGroupShow = function (state) {
         tipsSprites.visible = state;
         planeGroup.visible = state;
-        lineGroup.visible = state; 
+        lineGroup.visible = state;
     }
     this.createMap = function ({ geo }) {
         //先清空 
+        currData = geo;
         this.allGroupShow(false)
         this.disposeScene();
         setTimeout(() => {
@@ -697,7 +721,7 @@ var initMap = function ({
         this.allGroupShow(true)
         var index = 0;
         var typeAttack = ['2-1-1', '2-2-4', '2-2-5', '2-3-1', '2-3-2']
-         setTimeout(() => {
+        setTimeout(() => {
             svgGroups.traverse(child => {
                 var num = parseInt(Math.random() * 100);
                 child.userData.currValue = num
@@ -706,13 +730,13 @@ var initMap = function ({
             setInterval(() => {
                 geo.features.forEach(x => {
 
-                    svgGroups.traverse(child => {
+                    /* svgGroups.traverse(child => {
                         if (x.properties.name === child.userData.name) {
                             var num = parseInt(Math.random() * 1000);
                             child.userData.currValue = child.userData.value;
                             child.userData.value += Math.random() < 0.6 ? 0 : ~~(Math.random() * 20);
                         }
-                    })
+                    }) */
                     if (Math.random() < 0.3) {
                         index++;
                         var t = typeAttack[index % (typeAttack.length - 1)]
@@ -728,7 +752,7 @@ var initMap = function ({
                 })
 
             }, 1000)
-        }, 3000)  
+        }, 3000)
         /*   geo.features.forEach((path, i) => {
               var pos = projection(path.properties.cp);
               var geometry = new THREE.BoxGeometry(5, 5, 111);
@@ -862,12 +886,48 @@ var initMap = function ({
         // _this.addAttackPlane()
     }
     this.load();
+
+    var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#9ce0d4'];
+    _this.updateVal = function (child) {
+        for (var i = child.children.length - 1; i >= 0; i--) {
+            var elem = child.children[i]
+            if (elem.name == "cityNumber") {
+                _this.dispose(elem);
+                child.remove(elem)
+            }
+        }
+        child.userData.currValue = child.userData.value;
+        var numberPoint = _this.initCityNumber(child.userData, child.userData.value);
+        numberPoint.name = "cityNumber";
+        child.add(numberPoint);
+
+        var colorIndex = colors.length - 1;
+        if (child.userData.value > 800) {
+            colorIndex = 0;
+        } else if (child.userData.value > 600) {
+            colorIndex = 1;
+        } else if (child.userData.value > 400) {
+            colorIndex = 2;
+        } else if (child.userData.value > 200) {
+            colorIndex = 3;
+        } else if (child.userData.value > 100) {
+            colorIndex = 4;
+        } else if (child.userData.value >= 0) {
+            colorIndex = 5;
+        }
+        child.material.color.set(new THREE.Color(colors[colorIndex]))
+        // _this.setCityColor(child, child.userData.value)
+        // 根据值改变高度
+        var pz = -child.userData.currValue / MaxNumber * 10;
+        if (pz < -25) pz = -10;
+        _this.setCityHeightTop(child.position, pz)
+    }
     _this.disposeScene = function () {
         //清除所有的  
         _this.disposeGroup(tipsSprites)
-        _this.disposeGroup(planeGroup )
-        _this.disposeGroup(lineGroup  )
-        _this.disposeGroup(shapeGroup )
+        _this.disposeGroup(planeGroup)
+        _this.disposeGroup(lineGroup)
+        _this.disposeGroup(shapeGroup)
 
         /* svgGroups.children.traverse(function (child) {
             if (child.type === "Group") {
@@ -915,47 +975,18 @@ var initMap = function ({
             var obj = intersects[0].object;
             var data = obj.userData;
             typeof click == 'function' ? click(data) : null;
-        }else{
+        } else {
             click(false)
         }
     }
     var MaxNumber = 1000;//最大值
-    var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#9ce0d4']
+
     function animatePlanes() {
         shapeGroup.children.forEach(child => {
             // 改变值 
             if (child.userData.currValue !== child.userData.value) {
-                for (var i = child.children.length - 1; i >= 0; i--) {
-                    var elem = child.children[i]
-                    if (elem.name == "cityNumber") {
-                        _this.dispose(elem);
-                        child.remove(elem)
-                    }
-                }
-                child.userData.currValue = child.userData.value;
-                var numberPoint = _this.initCityNumber(child.userData, child.userData.value);
-                numberPoint.name = "cityNumber";
-                child.add(numberPoint);
-                var colorIndex = colors.length - 1;
-                if (child.userData.value > 800) {
-                    colorIndex = 0;
-                } else if (child.userData.value > 600) {
-                    colorIndex = 1;
-                } else if (child.userData.value > 400) {
-                    colorIndex = 2;
-                } else if (child.userData.value > 200) {
-                    colorIndex = 3;
-                } else if (child.userData.value > 100) {
-                    colorIndex = 4;
-                } else if (child.userData.value >= 0) {
-                    colorIndex = 5;
-                }
-                child.material.color.set(new THREE.Color(colors[colorIndex]))
-                // _this.setCityColor(child, child.userData.value)
-                // 根据值改变高度
-                var pz = -child.userData.currValue / MaxNumber * 10;
-                if (pz < -25) pz = -10;
-                _this.setCityHeightTop(child.position, pz)
+                // _this.updateVal(child); 
+
             }
             child.children.forEach(elem => {
                 if (elem.name === "animatePlane") {
