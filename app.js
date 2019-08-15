@@ -10,8 +10,7 @@ const index = require('./routes/index')
 const users = require('./routes/users')
 const httpProxy = require('http-proxy-middleware');
 const k2c = require('koa2-connect');
-// error handler
-onerror(app)
+// error handler 
 app.use(async (ctx, next) => {
   if (ctx.url.startsWith('/SOC')) { //匹配有api字段的请求url
     ctx.respond = false // 绕过koa内置对象response ，写入原始res对象，而不是koa处理过的response
@@ -27,7 +26,9 @@ app.use(async (ctx, next) => {
   }
   await next()
 })
- 
+// error handler
+onerror(app)
+
 // middlewares
 app.use(bodyparser({
   enableTypes:['json', 'form', 'text']
