@@ -18,12 +18,13 @@ var initMap = function ({
     var groups = [];
     var svgShape = [];
     var currMesh = null;
+    var interVal = null;
     currData = geo;
     var cameraOption = {/*  */
         position: {
-            x: -3.884992521293494,
-            y: 719.0519569394013,
-            z: 436.5194039842056
+            x: 43.786566325818086,
+            y: 565.2054879766487,
+            z: 445.8435990083539
         },
         ratatoion: {
             _x: -1.0251899019611612,
@@ -31,6 +32,7 @@ var initMap = function ({
             _z: -0.007607546501251655
         }
     }
+    var typeAttack = ['2-1-1', '2-2-4', '2-2-5', '2-3-1', '2-3-2']
     var controls = {
         run: true, //是否运行
         enableDamping: true, //动态阻尼系数 就是鼠标拖拽旋转灵敏度
@@ -218,6 +220,7 @@ var initMap = function ({
         renderer.setSize(width, height);
     }
     this.update = function (data) {
+        //更新数据
         currData.features.forEach(function (elem) {
             data.forEach(function (d) {
                 if (d.province.indexOf(elem.properties.name) !== -1) {
@@ -235,8 +238,40 @@ var initMap = function ({
                     })
                 }
             })
+            
         })
+        //模拟攻击 
+        var index = 0;
+        if (interVal) clearInterval(interVal);
+        setTimeout(() => {
+            interVal = setInterval(() => {
+                if (index >= cityPositions.length) {
+                    index = 0;
+                }
+                //攻击线
+                var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random()>0.9);
+                var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
+                var dst = projection(dstNode.cp);
+                var src = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
+                _this.addAttackPlane([...dst, -15], 1, 1000);
+                _this.createAttack({
+                    src: [...src, 0],
+                    dst: [...dst, 0]
+                }, 1);
+                //攻击图标
+                var t = typeAttack[index % (typeAttack.length - 1)];
+                 
+                _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
+                    var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
+                    tipsTween.start();
+                    tipsTween.onComplete(function () {
+                        _this.dispose(mesh);
+                    })
 
+                })
+                index++
+            }, 300);
+        }, 1000)
     }
     var optionsE = {
         depth: 20,
@@ -459,26 +494,6 @@ var initMap = function ({
         }
 
         shape.add(sprite);
-        // 添加动画
-        /*  var plane = initCoffet.createAnimatePlane()
-         plane.name = "animatePlane";
-         shape.add(plane)
-         switch (properties.name) {
-             case "广东":
-                 plane.position.set(pro[0], pro[1] - 15, -10);
-                 break;
-             case "澳门":
-                 plane.position.set(pro[0] - 10, pro[1] + 10, -10);
-                 break;
-             case "香港":
-                 plane.position.set(pro[0] + 10, pro[1] + 10, -10);
-                 break;
-             default:
-                 plane.position.set(pro[0], pro[1] + 5, -10);
-         }
- 
-         plane.userData = {
-         } */
     }
     this.addAttackPlane = function (position, type, time) {
         type = type || 1;
@@ -521,20 +536,21 @@ var initMap = function ({
         );
         var texture = new THREE.TextureLoader().load("./image/line.png");
         var points = curve.getPoints(50);
+        var c = Math.random() < 0.3 ? new THREE.Color("#ff0000") : Math.random() < 0.7 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
         var mesh_line = new MeshLineMaterial({
-            color: new THREE.Color("#ff0000"),
+            color:c,
             opacity: 1,
             resolution: resolution,
-            /*     map: texture,
-                useMap: 1.0, */
+           map: texture,
+                useMap: 1.0, 
             sizeAttenuation: 1,
-            lineWidth: 12,
+            lineWidth: 6,
             near: 1,
             far: 100000,
             depthTest: false,
             transparent: true,
             side: THREE.DoubleSide,
-            // blending: THREE.AdditiveBlending
+        //    blending: THREE.AdditiveBlending
         })
         var line = new MeshLine();
         var geometry = new THREE.Geometry();
@@ -621,10 +637,12 @@ var initMap = function ({
     this.initCityNumber = function (properties, num) {
         //显示当前危险个数 
         var color = "#ffffff";
-        if (num > 800) {
+        if (num > 1000) {
             color = "#ff0000"
         } else if (num > 400) {
             color = "#ff4200"
+        }else if(num>0){
+            color ="#ff6f44"
         }
         var cityNumber = addCityName({
             width: 128,
@@ -642,9 +660,9 @@ var initMap = function ({
             opacity: 1
         });
         var spriteNumber = new THREE.Sprite(cityNumberMaterial);
-        spriteNumber.name = "cityNumber"
+        spriteNumber.name = "cityNumber";
         var points = projection(properties.cp);
-        var x = points[0], y = points[1] + 5;
+        var x = points[0], y = points[1] + 10;
         switch (properties.name) {
             case "广东":
                 y -= 15;
@@ -720,7 +738,7 @@ var initMap = function ({
             })
         this.allGroupShow(true)
         var index = 0;
-        var typeAttack = ['2-1-1', '2-2-4', '2-2-5', '2-3-1', '2-3-2']
+        
         setTimeout(() => {
             svgGroups.traverse(child => {
                 var num = parseInt(Math.random() * 100);
@@ -737,18 +755,7 @@ var initMap = function ({
                             child.userData.value += Math.random() < 0.6 ? 0 : ~~(Math.random() * 20);
                         }
                     }) */
-                    if (Math.random() < 0.3) {
-                        index++;
-                        var t = typeAttack[index % (typeAttack.length - 1)]
-                        _this.initTipes({ width: 128, height: 128, type: t, properties: x.properties }, function (mesh) {
-                            var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
-                            tipsTween.start();
-                            tipsTween.onComplete(function () {
-                                _this.dispose(mesh);
-                            })
-
-                        })
-                    }
+                    
                 })
 
             }, 1000)
@@ -861,33 +868,12 @@ var initMap = function ({
         svgGroups.add(shapeGroup)
         _this.currCanvas.addEventListener("mouseup", onMouseUp)
 
-        //模拟攻击 
-        var index = 0;
-        setTimeout(() => {
-            var time = setInterval(() => {
-                if (index >= cityPositions.length) {
-                    index = 0;
-                }
-                var dst = projection(cityPositions[index].cp);
-                var src1 = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
-                var src = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
-                _this.addAttackPlane([...dst, -2], 1, 1000);
-                _this.createAttack({
-                    src: [...src, 0],
-                    dst: [...dst, 0]
-                }, 1);
-                _this.createAttack({
-                    src: [...src1, 0],
-                    dst: [...dst, 0]
-                }, 1);
-                index++
-            }, 300);
-        }, 3000)
+
         // _this.addAttackPlane()
     }
     this.load();
 
-    var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#9ce0d4'];
+    var colors = ['#ff6f5b', '#fa8737', '#fbab53', '#f79fd2', '#4bbdd6', '#9ce0d4', "#cddcd9"];
     _this.updateVal = function (child) {
         for (var i = child.children.length - 1; i >= 0; i--) {
             var elem = child.children[i]
@@ -902,18 +888,20 @@ var initMap = function ({
         child.add(numberPoint);
 
         var colorIndex = colors.length - 1;
-        if (child.userData.value > 800) {
+        if (child.userData.value > 1200) {
             colorIndex = 0;
-        } else if (child.userData.value > 600) {
+        } else if (child.userData.value > 900) {
             colorIndex = 1;
-        } else if (child.userData.value > 400) {
+        } else if (child.userData.value > 600) {
             colorIndex = 2;
-        } else if (child.userData.value > 200) {
+        } else if (child.userData.value > 300) {
             colorIndex = 3;
         } else if (child.userData.value > 100) {
             colorIndex = 4;
-        } else if (child.userData.value >= 0) {
+        } else if (child.userData.value > 0) {
             colorIndex = 5;
+        } else if (child.userData.value == 0) {
+            colorIndex = 6;
         }
         child.material.color.set(new THREE.Color(colors[colorIndex]))
         // _this.setCityColor(child, child.userData.value)
@@ -971,6 +959,7 @@ var initMap = function ({
         mouse.y = -((event.clientY - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(svgShape);
+        console.log(camera)
         if (intersects.length > 0) {
             var obj = intersects[0].object;
             var data = obj.userData;

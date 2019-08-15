@@ -152,7 +152,7 @@ var VM = new Vue({
         this.currAdr = "china";
         this.cityLevel = 1;
 
-
+        
         this.map = new initMap({
             geo: china,
             dom: dom,
@@ -295,7 +295,7 @@ var VM = new Vue({
                             color: color
 
                         }
-                    })
+                    }) 
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);
