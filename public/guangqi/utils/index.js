@@ -78,6 +78,7 @@ var VM = new Vue({
         cityLevel: 1,
         selectDay: 7,
         date: "",
+        dataInterval: null,
         chartEventType: null,
         chartDayTop5: null,
         chartAttackEvent: null,
@@ -192,7 +193,7 @@ var VM = new Vue({
         this.getDate();
         setInterval(() => {
             this.getDate();
-        }, 50000)
+        }, 10000)
 
         //安全事件
         //中下方
@@ -235,9 +236,15 @@ var VM = new Vue({
         getDate() {
             axios(ref.date).then(res => {
                 if (res.success) {
-                    res.realtime
-                    const date = new Date(res.realtime);
+                    if (this.dataInterval) clearInterval(this.dataInterval);
+                    let dateTime = res.realtime
+                    let date = new Date(res.realtime);
                     this.date = GetCurrentDate(date);
+                    this.dataInterval = setInterval(() => {
+                        dateTime += 1000;
+                        date = new Date(dateTime);
+                        this.date = GetCurrentDate(date);
+                    }, 1000)
                 }
             })
         },
@@ -375,8 +382,8 @@ var VM = new Vue({
                     this.cartTotal = cartTotal[cartTotal.length - 1].value;
                     this.newCar = newCar[newCar.length - 1].value;
                     this.newEventNum = newEvent[newEvent.length - 1].value;
-                    this.eventTotal = eventTotal[eventTotal.length-1].value;;
-                    
+                    this.eventTotal = eventTotal[eventTotal.length - 1].value;;
+
                     this.chartAttackEvent.update(newEvent);
                 }
             })
