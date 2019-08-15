@@ -21,8 +21,8 @@ function initBarList({
         data = data || [];
         return {
             grid: {
-                left: '5%',
-                right: 25,
+                left: '3%',
+                right: 35,
                 top: 20,
                 bottom: 0,
                 containLabel: true

@@ -157,13 +157,13 @@
             </div>
             <!-- center -->
             <div class="g-center">
+
                 <div class="g-select">
-                    <span>今日动态</span>
+                    <span>最近{{selectDay}}天</span>
                     <img src="./image/threej.png" alt="">
                     <ul class="g-selectlist">
-                        <li>今日动态</li>
-                        <li>一周动态</li>
-                        <li>一月动态</li>
+                        <li @click="selectDataDay(item.value)" v-for="item in dayItems" :key="item.value">
+                            最近{{item.value}}天</li>
                     </ul>
                 </div>
                 <div style="height:696px" class="g-emap">
@@ -171,6 +171,12 @@
 
                     </div>
                     <div id="svg"></div>
+                    <img src="./image/jianbian.png" alt="" class="jianbian">
+                    <div class="nanshabox">
+                        <div class="g-box-content">
+                            <img src="./image/nansha.png" alt="南沙群岛" class="nansha">
+                        </div>
+                    </div>
                 </div>
                 <div class="relative" style="height:281px">
                     <div class="g-scroll-list">
@@ -178,7 +184,7 @@
                         <span>攻击滚动实时展示列表</span>
                     </div>
                     <cbox>
-                        <div class="g-full g-atballe-pad" slot="main">
+                        <div class="g-full g-atballe-pad" style="overflow: hidden" slot="main">
                             <table class="g-atballe">
                                 <thead>
                                     <tr>
@@ -194,11 +200,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(item,index) in attackList"
-                                        :class="index==attackList.length-1?'g-at-ac3':'g-at-ac'+index%4" :key="item.id">
+                                    <tr v-for="(item,index) in attackList" :class="item.color||''" :key="item.id">
                                         <td v-html="item.id"></td>
                                         <td>
-                                            <span class="text-over" style="width:130px;display: inline-block;overflow: hidden;" v-html="item.vin"></span>
+                                            <span class="text-over"
+                                                style="width:130px;display: inline-block;overflow: hidden;"
+                                                v-html="item.vin">
+                                                <a href=""></a>
+                                            </span>
                                         </td>
                                         <td v-html="item.code"></td>
                                         <td v-html="item.ip"></td>
@@ -242,31 +251,31 @@
                         <div slot="main">
                             <ul class="g-overview">
                                 <li class="g-overview-item">
-                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-title">{{cartTotal}}</div>
                                     <div class="g-overview-data">
                                         车辆总数
                                     </div>
                                 </li>
                                 <li class="g-overview-item">
-                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-title">{{newCar}}</div>
                                     <div class="g-overview-data">
                                         今日增加
                                     </div>
                                 </li>
-                                <li class="g-overview-item">
-                                    <div class="g-overview-title">2050</div>
+                                <!-- <li class="g-overview-item">
+                                    <div class="g-overview-title">{{newEventNum}}</div>
                                     <div class="g-overview-data">
                                         攻击车辆
                                     </div>
-                                </li>
+                                </li> -->
                                 <li class="g-overview-item">
-                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-title">{{eventTotal}}</div>
                                     <div class="g-overview-data">
                                         累计事件
                                     </div>
                                 </li>
                                 <li class="g-overview-item">
-                                    <div class="g-overview-title">2050</div>
+                                    <div class="g-overview-title">{{newEventNum}}</div>
                                     <div class="g-overview-data">
                                         今日事件
                                     </div>

@@ -534,7 +534,7 @@ var initMap = function ({
             depthTest: false,
             transparent: true,
             side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
+            // blending: THREE.AdditiveBlending
         })
         var line = new MeshLine();
         var geometry = new THREE.Geometry();

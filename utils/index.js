@@ -82,7 +82,23 @@ var VM = new Vue({
         chartDayTop5: null,
         chartAttackEvent: null,
         provinceId: "",
-        map:null
+        map: null,
+        dayItems: [
+            {
+                value: 7
+            }, {
+                value: 15
+            }, {
+                value: 30
+            }, {
+                value: 90
+            }
+        ],
+        itemsAnimatList: null,
+        cartTotal: 0,
+        newCar: 0,
+        newEventNum: 0,
+        eventTotal: 0,
     },
     components: {
         cbox: box
@@ -180,17 +196,24 @@ var VM = new Vue({
 
         //安全事件
         //中下方
-        this.getEventType();
+        this.getEventType(30);
 
         // 左上方
         this.selectEvent();
     },
     methods: {
+        selectDataDay(day) {
+            if (this.selectDay === day) {
+                return
+            }
+            this.selectDay = day;
+            this.selectEvent();
+        },
         selectEvent() {
             this.getAttackType(this.selectDay);
             this.getAttackProvince(this.selectDay);
             this.getDailyStat(this.selectDay);
-            // this.getDeviceData(this.selectDay);
+            this.getDeviceData(this.selectDay);
         },
         getJson(city, callback) {
             var cityName = "";
@@ -221,6 +244,7 @@ var VM = new Vue({
         getEventType(size = 10) {
             axios(ref.eventType + size).then(res => {
                 if (res.success) {
+                    if (this.itemsAnimatList) clearInterval(this.itemsAnimatList);
                     const data = res.data;
                     /* 
                     {
@@ -242,8 +266,16 @@ var VM = new Vue({
                         } catch (err) {
                             content = elem.content;
                         }
+                        let color;
+                        switch (elem.isNew) {
+                            case true:
+                                color = "g-at-ac1";
+                                break
+                            default:
+                                color = "";
+                        }
                         return {
-                            id: index++,
+                            id: index + 1,
                             vin: elem.vehicleId,
                             code: elem.code,
                             ip: typeof content === 'object' ? content.src_ip : '-',
@@ -252,10 +284,15 @@ var VM = new Vue({
                             date: GetCurrentDate(new Date(elem.eventTime)),
                             src: "",
                             dst: "",
-                            content: content
+                            content: content,
+                            color: color
 
                         }
                     })
+                    this.itemsAnimatList = setInterval(() => {
+                        var obj = this.attackList.shift();
+                        this.attackList.push(obj);
+                    }, 2000)
                 }
             })
         },
@@ -291,9 +328,9 @@ var VM = new Vue({
                     }))
                     this.chartDayTop5.update(items);
                     //地图数据 
-                   setTimeout(()=>{
-                       this.map.update(cloneData)
-                   },2000)
+                    setTimeout(() => {
+                        this.map.update(cloneData)
+                    }, 2000)
                 }
             })
         },
@@ -306,10 +343,6 @@ var VM = new Vue({
                     var eventTotal = [];//车辆总数
                     // 0 今日事件新增；1 今日车辆新增；2 车辆累计总数；3 事件累计总数
                     let data = res.data;
-                    // const spliceLen = 5;
-                    // if (data.length > spliceLen) {
-                    //     data.splice(spliceLen)
-                    // }
                     for (var i = 0; i < data.length; i++) {
                         var elem = data[i];
                         switch (parseInt(elem.type)) {
@@ -339,8 +372,12 @@ var VM = new Vue({
                                 break;
                         }
                     }
-
-                    this.chartAttackEvent.update(newEvent)
+                    this.cartTotal = cartTotal[cartTotal.length - 1].value;
+                    this.newCar = newCar[newCar.length - 1].value;
+                    this.newEventNum = newEvent[newEvent.length - 1].value;
+                    this.eventTotal = eventTotal[eventTotal.length-1].value;;
+                    
+                    this.chartAttackEvent.update(newEvent);
                 }
             })
         },
@@ -359,7 +396,6 @@ var VM = new Vue({
             }).then(res => {
                 if (res.success) {
                     let data = res.data;
-                    console.log(data)
                 }
             })
         }

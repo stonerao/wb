@@ -166,6 +166,32 @@
     top: 1px;
     border: 2px solid #2852a0;
     border-radius: 3px;
+    overflow: hidden;
+}
+.jianbian{
+    position: absolute;
+    left:10px;
+    bottom:10px;
+}
+.nanshabox {
+    width: 104px;
+    height: 156px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    background: rgba(200, 200, 200, 0.1)
+}
+
+.nanshabox img {
+    width: 100%;
+    height: 100%;
+
+}
+
+.nansha {
+    position: absolute;
+    bottom: 0;
+    right: 0;
 }
 
 .g-full {
@@ -218,7 +244,7 @@
 }
 
 .g-overview-item {
-    width: 33.3%;
+    width: 50%;
     text-align: center;
     margin-bottom: 15px;
 }
