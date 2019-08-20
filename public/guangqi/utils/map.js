@@ -19,6 +19,7 @@ var initMap = function ({
     var svgShape = [];
     var currMesh = null;
     var interVal = null;
+    _this.cityLevel = 1;//当前层级
     currData = geo;
     var cameraOption = {/*  */
         position: {
@@ -108,8 +109,6 @@ var initMap = function ({
             'gl_Position = projectionMatrix * modelViewMatrix * vec4( vPos, 1.0 );',
             '}'
         ].join("\n"),
-
-
         SplineFShader: [
             "varying vec4 vColor; void main() {  gl_FragColor = vColor; } ",
         ].join("\n"),
@@ -238,7 +237,7 @@ var initMap = function ({
                     })
                 }
             })
-            
+
         })
         //模拟攻击 
         var index = 0;
@@ -248,27 +247,31 @@ var initMap = function ({
                 if (index >= cityPositions.length) {
                     index = 0;
                 }
-                //攻击线
-                var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random()>0.9);
-                var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
-                var dst = projection(dstNode.cp);
-                var src = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
-                _this.addAttackPlane([...dst, -15], 1, 1000);
-                _this.createAttack({
-                    src: [...src, 0],
-                    dst: [...dst, 0]
-                }, 1);
-                //攻击图标
-                var t = typeAttack[index % (typeAttack.length - 1)];
-                 
-                _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
-                    var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
-                    tipsTween.start();
-                    tipsTween.onComplete(function () {
-                        _this.dispose(mesh);
-                    })
+                //全国地图
+                if (_this.cityLevel===1) {
+                    //攻击线
+                    var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random() > 0.9);
+                    var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
+                    var dst = projection(dstNode.cp);
+                    var src = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
+                    _this.addAttackPlane([...dst, -15], 1, 1000);
+                    _this.createAttack({
+                        src: [...src, 0],
+                        dst: [...dst, 0]
+                    }, 1);
+                    //攻击图标
+                    var t = typeAttack[index % (typeAttack.length - 1)];
 
-                })
+                    _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
+                        var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
+                        tipsTween.start();
+                        tipsTween.onComplete(function () {
+                            _this.dispose(mesh);
+                        })
+
+                    })
+                }
+
                 index++
             }, 300);
         }, 1000)
@@ -295,19 +298,15 @@ var initMap = function ({
             v_next_x = inNext.x - inPt.x, v_next_y = inNext.y - inPt.y,
             v_prev_lensq = (v_prev_x * v_prev_x + v_prev_y * v_prev_y),
             collinear0 = (v_prev_x * v_next_y - v_prev_y * v_next_x);
-
         if (Math.abs(collinear0) > Number.EPSILON) {
             var v_prev_len = Math.sqrt(v_prev_lensq);
             var v_next_len = Math.sqrt(v_next_x * v_next_x + v_next_y * v_next_y);
-
             var ptPrevShift_x = (inPrev.x - v_prev_y / v_prev_len),
                 ptPrevShift_y = (inPrev.y + v_prev_x / v_prev_len),
                 ptNextShift_x = (inNext.x - v_next_y / v_next_len),
                 ptNextShift_y = (inNext.y + v_next_x / v_next_len);
-
             var sf = ((ptNextShift_x - ptPrevShift_x) * v_next_y -
                 (ptNextShift_y - ptPrevShift_y) * v_next_x) / (v_prev_x * v_next_y - v_prev_y * v_next_x);
-
             v_trans_x = (ptPrevShift_x + v_prev_x * sf - inPt.x);
             v_trans_y = (ptPrevShift_y + v_prev_y * sf - inPt.y);
 
@@ -428,8 +427,8 @@ var initMap = function ({
         shape.position.x = pro[0] * 6;
         shape.position.y = pro[1] * 6;
         shape.position.z = 0;
-        createjs.Tween.get(shape.position, { override: true }).to({ x: 0, y: 0, z: 0 }, 2000, createjs.Ease.linear)
-
+        var animat = new TWEEN.Tween(shape.position).to({ x: 0, y: 0, z: 0 }, 2000);
+        animat.start()
         // 生成轮廓线条
 
         // 偏移
@@ -464,7 +463,7 @@ var initMap = function ({
 
         // 生成地区名字
         var cityNameCtx = addCityName({
-            width: 256,
+            width: 512,
             height: 64,
             text: properties.name,
             color: "#ffffff"
@@ -478,7 +477,7 @@ var initMap = function ({
             opacity: 1
         });
         var sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(72, 18);
+        sprite.scale.set(144, 18);
         switch (properties.name) {
             case "广东":
                 sprite.position.set(pro[0], pro[1] - 25, -15)
@@ -538,11 +537,11 @@ var initMap = function ({
         var points = curve.getPoints(50);
         var c = Math.random() < 0.3 ? new THREE.Color("#ff0000") : Math.random() < 0.7 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
         var mesh_line = new MeshLineMaterial({
-            color:c,
+            color: c,
             opacity: 1,
             resolution: resolution,
-        //    map: texture,
-        //         useMap: 1.0, 
+            //    map: texture,
+            //         useMap: 1.0, 
             sizeAttenuation: 1,
             lineWidth: 6,
             near: 1,
@@ -550,7 +549,7 @@ var initMap = function ({
             depthTest: false,
             transparent: true,
             side: THREE.DoubleSide,
-        //    blending: THREE.AdditiveBlending
+            //    blending: THREE.AdditiveBlending
         })
         var line = new MeshLine();
         var geometry = new THREE.Geometry();
@@ -561,7 +560,6 @@ var initMap = function ({
         line.setGeometry(geometry, function (p) { return 1 - Math.cos(p); });
         var mesh = new THREE.Mesh(line.geometry, mesh_line);
         lineGroup.add(mesh);
-
         var index = 0;
         var interval = setInterval(() => {
             if (index >= points.length * 2) {
@@ -641,8 +639,8 @@ var initMap = function ({
             color = "#ff0000"
         } else if (num > 400) {
             color = "#ff4200"
-        }else if(num>0){
-            color ="#ff6f44"
+        } else if (num > 0) {
+            color = "#ff6f44"
         }
         var cityNumber = addCityName({
             width: 128,
@@ -687,7 +685,8 @@ var initMap = function ({
     }
     // 根据值设置城市颜色
     this.setCityHeightTop = function (position, nextZ) {
-        createjs.Tween.get(position, { override: true }).to({ z: nextZ }, 200, createjs.Ease.linear)
+        var animat = new TWEEN.Tween(position).to({ z: nextZ }, 200);
+        animat.start()
     }
     this.initSvgBox = function () {
         var boxs = new THREE.Group();
@@ -718,18 +717,20 @@ var initMap = function ({
         d3.select("#svg").selectAll('svg').remove();
         var svg = d3.select("#svg").append("svg");
         var svgGroup = svg.append('g');
-        var svgps = [];
-        var allPath = svgGroup.selectAll("path")
+        svgGroup.selectAll("path")
             .data(geo.features)
             .enter()
             .append("path")
-            .attr("d", (d, i) => {
-                // svgps.push(path(d)) 
-                cityPositions.push(d.properties);
-                initSvg(path(d), d.properties)
-                if (i == geo.features.length - 1) {
+            .attr("d", (d, i) => { 
+                cityPositions.push(d.properties); 
+                var pathText = path(d);
+                if (pathText.indexOf("e")!=-1){
+                    pathText = pathText.replace("e", "");
+                    console.log(pathText)
                 }
-                return path(d)
+                initSvg(pathText, d.properties)
+
+                
             })
             .attr("stroke", "#009CFF")
             .attr("stroke-width", 1)
@@ -738,7 +739,7 @@ var initMap = function ({
             })
         this.allGroupShow(true)
         var index = 0;
-        
+
         setTimeout(() => {
             svgGroups.traverse(child => {
                 var num = parseInt(Math.random() * 100);
@@ -755,7 +756,7 @@ var initMap = function ({
                             child.userData.value += Math.random() < 0.6 ? 0 : ~~(Math.random() * 20);
                         }
                     }) */
-                    
+
                 })
 
             }, 1000)
@@ -866,7 +867,7 @@ var initMap = function ({
         svgGroups.add(planeGroup)
         svgGroups.add(lineGroup)
         svgGroups.add(shapeGroup)
-        _this.currCanvas.addEventListener("mouseup", onMouseUp)
+        _this.currCanvas.addEventListener("dblclick", onMouseUp)
 
 
         // _this.addAttackPlane()
@@ -959,7 +960,6 @@ var initMap = function ({
         mouse.y = -((event.clientY - canvas.getBoundingClientRect().top) / canvas.offsetHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(svgShape);
-        console.log(camera)
         if (intersects.length > 0) {
             var obj = intersects[0].object;
             var data = obj.userData;

@@ -112,7 +112,6 @@
     <script src="./utils/chart.js"></script>
     <script src="./utils/map.js"></script>
     <script src="./utils/THREE.MeshLine.js"></script>
-    <script src="./utils/tweenjs.min.js"></script>
     <script src="./js/libs/tween.min.js"></script>
     <script src="./utils/axios.min.js"></script>
     <title>汽车网络安全态势感知</title>
@@ -157,7 +156,6 @@
             </div>
             <!-- center -->
             <div class="g-center">
-
                 <div class="g-select">
                     <span>最近{{selectDay}}天</span>
                     <img src="./image/threej.png" alt="">
@@ -167,6 +165,7 @@
                     </ul>
                 </div>
                 <div style="height:696px" class="g-emap">
+                    <span class="backMap" v-if="cityLevel==2" @click="backmap">返回</span>
                     <div class="gmap" id="map">
 
                     </div>
@@ -203,14 +202,16 @@
                                     <tr v-for="(item,index) in attackList" :class="item.color||''" :key="item.id">
                                         <td v-html="item.id"></td>
                                         <td>
-                                            <span class="text-over"
-                                                style="width:130px;display: inline-block;overflow: hidden;"
-                                                v-html="item.vin">
+                                            <span class="text-over items-over" style="width:130px;" v-html="item.vin">
                                                 <a href=""></a>
                                             </span>
                                         </td>
                                         <td v-html="item.code"></td>
-                                        <td v-html="item.ip"></td>
+                                        <td>
+                                            <span class="text-over items-over" style="width:130px;" v-html="item.ip">
+                                                <a href=""></a>
+                                            </span>
+                                        </td>
                                         <td v-html="item.type"></td>
                                         <td v-html="item.address"></td>
                                         <td v-html="item.date"></td>

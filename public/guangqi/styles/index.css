@@ -409,3 +409,17 @@
     white-space: nowrap;
     /*规定段落中的文本不进行换行 */
 }
+.items-over{
+    display:inline-block;
+    overflow: hidden;
+    position: relative;
+    top:5px;
+}
+.backMap{
+    position: absolute;
+    left:20px;
+    color:#fff;
+    cursor: pointer;
+    z-index: 20;
+    top:50px;
+}

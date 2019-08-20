@@ -152,23 +152,29 @@ var VM = new Vue({
         this.currAdr = "china";
         this.cityLevel = 1;
 
-        
+
         this.map = new initMap({
             geo: china,
             dom: dom,
             click: function (res) {
-                return
                 if (res === false && _this.cityLevel === 2) {
                     //点击空白 
-                    _this.cityLevel = 1;
-                    map.createMap({
+                    setTimeout(() => {
+                        _this.cityLevel = 1;
+                    }, 2000)
+                    _this.map.cityLevel = 1
+                    _this.map.createMap({
                         geo: china
                     })
                 } else if (_this.cityLevel === 1 && res !== false) {
                     _this.getJson(res.id, function (data) {
-                        map.createMap({
-                            geo: data
-                        })
+                        _this.map.cityLevel = 2;
+                        _this.cityLevel = 2;
+                        if (data) {
+                            _this.map.createMap({
+                                geo: data
+                            })
+                        }
                     })
                 }
             }
@@ -176,18 +182,11 @@ var VM = new Vue({
 
         window.addEventListener("resize", function () {
             _this.map.resize();//地图resize event
-            eventType.resize();
-            attackEvent.resize();
-            dailyEvent.resize();
+            _this.chartEventType.resize();
+            _this.chartAttackEvent.resize();
+            _this.chartDayTop5.resize();
         })
-        /*  setTimeout(() => {
-             this.getJson(`sichuan`, function (data) {
-                 map.createMap({
-                     geo: data
-                 })
-             })
- 
-         }, 5000) */
+
 
         //dete
         this.getDate();
@@ -203,6 +202,14 @@ var VM = new Vue({
         this.selectEvent();
     },
     methods: {
+        backmap() {
+            this.map.cityLevel = 1;
+            this.cityLevel = 1;
+            this.getAttackProvince(this.selectDay);
+            this.map.createMap({
+                geo: china
+            })
+        },
         selectDataDay(day) {
             if (this.selectDay === day) {
                 return
@@ -217,20 +224,13 @@ var VM = new Vue({
             this.getDeviceData(this.selectDay);
         },
         getJson(city, callback) {
-            var cityName = "";
-            switch (city) {
-                case "sichuan":
-                    cityName = "si_chuan_geo";
-                    break
-            }
             if (!city) {
                 return false
             }
             this.currAdr = city;
             this.cityLevel = 2;
             axios(`./geoJson/${city}_geo.json`).then(res => {
-                var data = res.data;
-                typeof callback === 'function' ? callback(data) : false;
+                typeof callback === 'function' ? callback(res) : false;
             })
         },
         getDate() {
@@ -295,7 +295,7 @@ var VM = new Vue({
                             color: color
 
                         }
-                    }) 
+                    })
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);
