@@ -19,6 +19,7 @@ var initMap = function ({
     var svgShape = [];
     var currMesh = null;
     var interVal = null;
+    var timeInter = null;
     _this.cityLevel = 1;//当前层级
     currData = geo;
     var cameraOption = {/*  */
@@ -39,8 +40,8 @@ var initMap = function ({
         enableDamping: true, //动态阻尼系数 就是鼠标拖拽旋转灵敏度
         dampingFactor: true, //动态阻尼系数 就是鼠标拖拽旋转灵敏度
         enableZoom: true, ////是否可以缩放
-        minDistance: 0, //设置相机距离原点的最远距离
-        maxDistance: 3000, //设置相机距离原点的最远距离
+        minDistance: 300, //设置相机距离原点的最远距离
+        maxDistance: 1000, //设置相机距离原点的最远距离
         enablePan: true, ////是否开启右键拖拽
         enableRotate: true,
         autoRotate: false, //自动旋转
@@ -184,31 +185,8 @@ var initMap = function ({
 
     }
     this.initLight = function (path) {
-        /* var light = new THREE.AmbientLight(0x404040); // soft white light
-        light.castShadow  = true;
-        scene.add(light);
-       */
         var light = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.9);
-
         scene.add(light);
-
-        /*   var spotLight = new THREE.SpotLight(0xffffff);
-          spotLight.position.set(480, 500, -380);
-          scene.add(spotLight);
-        spotLight.intensity = 0.6;
-          spotLight.angle = 1.06;  */
-
-        /*   spotLight.shadowCameraNear = 1;
-          spotLight.shadowCameraFar = 5;
-          spotLight.shadowCameraFov = 11;
-          spotLight.shadowCameraVisible = true; 
-          spotLight.shadowMapWidth = 1024;
-          spotLight.shadowMapHeight = 1024;
-          spotLight.shadowDarkness = 0.3; */
-
-        // spotLight.castShadow = true;//开启灯光投射阴影
-        /* var spotLightHelper = new THREE.SpotLightHelper(spotLight);
-        scene.add(spotLightHelper); */
     }
 
     this.resize = function () {
@@ -242,13 +220,14 @@ var initMap = function ({
         //模拟攻击 
         var index = 0;
         if (interVal) clearInterval(interVal);
-        setTimeout(() => {
+        if (timeInter) clearTimeout(timeInter);
+        timeInter = setTimeout(() => {
             interVal = setInterval(() => {
                 if (index >= cityPositions.length) {
                     index = 0;
                 }
                 //全国地图
-                if (_this.cityLevel===1) {
+                if (_this.cityLevel === 1) {
                     //攻击线
                     var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random() > 0.9);
                     var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
@@ -261,17 +240,14 @@ var initMap = function ({
                     }, 1);
                     //攻击图标
                     var t = typeAttack[index % (typeAttack.length - 1)];
-
                     _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
                         var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
                         tipsTween.start();
                         tipsTween.onComplete(function () {
                             _this.dispose(mesh);
                         })
-
                     })
                 }
-
                 index++
             }, 300);
         }, 1000)
@@ -346,10 +322,8 @@ var initMap = function ({
         opts = opts || {};
         contour = contour || [];
         var type = opts.type || 0,
-
             u1 = (undefined != opts.uRatio) ? opts.uRatio : .4,
             v1 = (undefined != opts.vRatio) ? opts.vRatio : 1;
-
         var bgeo = new THREE.BufferGeometry();
         reverse(contour);
 
@@ -561,9 +535,9 @@ var initMap = function ({
         var mesh = new THREE.Mesh(line.geometry, mesh_line);
         lineGroup.add(mesh);
         var index = 0;
-        var interval = setInterval(() => {
+        var tm = setInterval(() => {
             if (index >= points.length * 2) {
-                clearInterval(interval);
+                clearInterval(tm);
                 _this.dispose(mesh);
                 return
             }
@@ -721,16 +695,14 @@ var initMap = function ({
             .data(geo.features)
             .enter()
             .append("path")
-            .attr("d", (d, i) => { 
-                cityPositions.push(d.properties); 
+            .attr("d", (d, i) => {
+                cityPositions.push(d.properties);
                 var pathText = path(d);
-                if (pathText.indexOf("e")!=-1){
+                if (pathText.indexOf("e") != -1) {
+                    // 出现js精算不够问题
                     pathText = pathText.replace("e", "");
-                    console.log(pathText)
                 }
                 initSvg(pathText, d.properties)
-
-                
             })
             .attr("stroke", "#009CFF")
             .attr("stroke-width", 1)
@@ -738,39 +710,6 @@ var initMap = function ({
                 return "#fff0";
             })
         this.allGroupShow(true)
-        var index = 0;
-
-        setTimeout(() => {
-            svgGroups.traverse(child => {
-                var num = parseInt(Math.random() * 100);
-                child.userData.currValue = num
-                child.userData.value = num;
-            })
-            setInterval(() => {
-                geo.features.forEach(x => {
-
-                    /* svgGroups.traverse(child => {
-                        if (x.properties.name === child.userData.name) {
-                            var num = parseInt(Math.random() * 1000);
-                            child.userData.currValue = child.userData.value;
-                            child.userData.value += Math.random() < 0.6 ? 0 : ~~(Math.random() * 20);
-                        }
-                    }) */
-
-                })
-
-            }, 1000)
-        }, 3000)
-        /*   geo.features.forEach((path, i) => {
-              var pos = projection(path.properties.cp);
-              var geometry = new THREE.BoxGeometry(5, 5, 111);
-              var material = new THREE.MeshBasicMaterial({ color: 0x00Fff00 });
-              var cube = new THREE.Mesh(geometry, material);
-              svgGroups.add(cube)
-              cube.position.x = pos[0]
-              cube.position.y = pos[1]
-              cube.position.z = -111 / 2
-          }) */
     }
     var tipsSprites = new THREE.Group();
     var planeGroup = new THREE.Group();
@@ -868,9 +807,6 @@ var initMap = function ({
         svgGroups.add(lineGroup)
         svgGroups.add(shapeGroup)
         _this.currCanvas.addEventListener("dblclick", onMouseUp)
-
-
-        // _this.addAttackPlane()
     }
     this.load();
 
@@ -1002,18 +938,6 @@ var initMap = function ({
             })
         })
     }
-    // setInterval(() => {
-    //     svgGroups.children.forEach((child, i) => {
-    //         // child.material.color.set(new THREE.Color(`rgb(${255},${90},${parseInt(Math.random() * 255)})`))
-    //         child.children.forEach(elem => {
-    //             if (elem.name === "animatePlane") {
-    //                 elem.children.forEach(node => {
-    //                     // node.userData.show = Math.random() < 0.5 ? true : false;
-    //                 })
-    //             }
-    //         })
-    //     })
-    // }, 5000)
     function render() {
         if (controls) controls.update();
         if (stats) stats.update();

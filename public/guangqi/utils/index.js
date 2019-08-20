@@ -197,9 +197,14 @@ var VM = new Vue({
         //安全事件
         //中下方
         this.getEventType(30);
+        setInterval(() => {
+            this.getEventType(30);
+        }, 60000)
 
         // 左上方
-        this.selectEvent();
+        setInterval(() => {
+            this.selectEvent();
+        },3000)
     },
     methods: {
         backmap() {
