@@ -423,3 +423,22 @@
     z-index: 20;
     top:50px;
 }
+.attack-map-list{
+    position: absolute;
+    left:0;
+    bottom:50px;
+    width:350px;
+    height:150px;
+    
+}
+
+.attack-map-item{
+    display:flex;
+    line-height:24px;
+    
+}
+.attack-map-item span{
+    flex:1;
+    width:50%; 
+    text-indent:10px;
+}

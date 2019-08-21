@@ -74,6 +74,7 @@ var VM = new Vue({
             }
         ],
         attackList: attackList,
+        attackMapList:[],
         currAdr: null,
         cityLevel: 1,
         selectDay: 7,
@@ -152,7 +153,7 @@ var VM = new Vue({
         this.currAdr = "china";
         this.cityLevel = 1;
 
-
+        var attackMapIndex = 0;
         this.map = new initMap({
             geo: china,
             dom: dom,
@@ -177,6 +178,18 @@ var VM = new Vue({
                         }
                     })
                 }
+            },
+            attackCallBack:function(data){
+                //每次产生攻击后的回调函数
+                if (_this.attackMapList.length>5){
+                    _this.attackMapList.shift();
+                }
+                _this.attackMapList.push({
+                    srcName:data.src.name,
+                    dstName:data.dst.name,
+                    id:attackMapIndex
+                });
+                attackMapIndex++;
             }
         })
 
@@ -301,6 +314,7 @@ var VM = new Vue({
 
                         }
                     })
+                    console.log(this.attackList)
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);
@@ -395,10 +409,10 @@ var VM = new Vue({
         },
         getDeviceData(day = 7) {
             //获取设备数据
+            return 
             axios(ref.eventDataDevice + day).then(res => {
                 if (res.success) {
-                    let data = res.data;
-                    console.log(data)
+                    let data = res.data; 
                 }
             })
         },

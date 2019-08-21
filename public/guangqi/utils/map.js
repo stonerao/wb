@@ -1,5 +1,5 @@
 var initMap = function ({
-    geo, dom, svg, click
+    geo, dom, svg, click, attackCallBack
 }) {
     //生成地图
     var _this = this;
@@ -231,22 +231,26 @@ var initMap = function ({
                     //攻击线
                     var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random() > 0.9);
                     var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
+                    var srcNode = cityPositions[~~(Math.random() * cityPositions.length)]
                     var dst = projection(dstNode.cp);
-                    var src = projection(cityPositions[~~(Math.random() * cityPositions.length)].cp);
+                    var src = projection(srcNode.cp);
+                    //攻击展示
                     _this.addAttackPlane([...dst, -15], 1, 1000);
                     _this.createAttack({
                         src: [...src, 0],
                         dst: [...dst, 0]
                     }, 1);
                     //攻击图标
-                    var t = typeAttack[index % (typeAttack.length - 1)];
+                    /* var t = typeAttack[index % (typeAttack.length - 1)];
                     _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
                         var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
                         tipsTween.start();
                         tipsTween.onComplete(function () {
                             _this.dispose(mesh);
                         })
-                    })
+                    }) */
+                    // 
+                    typeof attackCallBack === 'function' ? attackCallBack({ src: srcNode, dst: dstNode }) : null;
                 }
                 index++
             }, 300);
