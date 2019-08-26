@@ -27,19 +27,7 @@ axios.interceptors.response.use(res => {
     }
 
 })
-var attackList = [...new Array(8)].map((elem, index) => {
-    return {
-        id: index + 1,
-        vin: "LS5A3ADE0AB046791",
-        code: "421Ads",
-        ip: "255.255.255.255",
-        type: "设置ACK和RST标志位的dos攻击",
-        address: "四川省 达州市",
-        date: "2019-7-24 21:31:36",
-        src: "四川",
-        dst: "上海"
-    }
-})
+
 const url = "/SOC/webclient/api";
 const ref = {
     date: url + "/ss/server/info",
@@ -73,8 +61,8 @@ var VM = new Vue({
                 value: 54021
             }
         ],
-        attackList: attackList,
-        attackMapList:[],
+        attackList: [],
+        attackMapList: [],
         currAdr: null,
         cityLevel: 1,
         selectDay: 7,
@@ -105,8 +93,17 @@ var VM = new Vue({
     components: {
         cbox: box
     },
+    created(){
+        let urlParms = this.getRequest();
+        if (urlParms.hasOwnProperty("day")) {
+            let day = urlParms.day;
+            this.selectDay = parseInt(day) === NaN ? 30 : parseInt(day); 
+        }
+    },
     mounted() {
         let _this = this;
+        
+        
         document.querySelector(".l-loding").remove()
         var names = [
             '待选项的IP包（一）',
@@ -158,6 +155,8 @@ var VM = new Vue({
             geo: china,
             dom: dom,
             click: function (res) {
+                console.log(res);
+                return
                 if (res === false && _this.cityLevel === 2) {
                     //点击空白 
                     setTimeout(() => {
@@ -179,15 +178,15 @@ var VM = new Vue({
                     })
                 }
             },
-            attackCallBack:function(data){
-                //每次产生攻击后的回调函数
-                if (_this.attackMapList.length>5){
+            attackCallBack: function (data) {
+                //每次产生攻击后的回调函数 
+                if (_this.attackMapList.length > 5) {
                     _this.attackMapList.shift();
                 }
                 _this.attackMapList.push({
-                    srcName:data.src.name,
-                    dstName:data.dst.name,
-                    id:attackMapIndex
+                    srcName: data.src.name,
+                    dstName: data.dst.name,
+                    id: attackMapIndex
                 });
                 attackMapIndex++;
             }
@@ -212,14 +211,26 @@ var VM = new Vue({
         this.getEventType(30);
         setInterval(() => {
             this.getEventType(30);
-        }, 60000)
+        }, 180000)
 
         // 左上方
         setInterval(() => {
             this.selectEvent();
-        },3000)
+        }, 3000)
     },
     methods: {
+        getRequest() {
+            var url = location.search; //获取url中"?"符后的字串  
+            var theRequest = new Object();
+            if (url.indexOf("?") != -1) {
+                var str = url.substr(1);
+                strs = str.split("&");
+                for (var i = 0; i < strs.length; i++) {
+                    theRequest[strs[i].split("=")[0]] = decodeURI(strs[i].split("=")[1]);
+                }
+            }
+            return theRequest;
+        },
         backmap() {
             this.map.cityLevel = 1;
             this.cityLevel = 1;
@@ -314,7 +325,6 @@ var VM = new Vue({
 
                         }
                     })
-                    console.log(this.attackList)
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);
@@ -408,11 +418,26 @@ var VM = new Vue({
             })
         },
         getDeviceData(day = 7) {
-            //获取设备数据
-            return 
+            //获取设备数据 
+            this.attackComponents = [...new Array(4)].map(function (elem) {
+                return {
+                    nameL: "",
+                    value: "",
+                    date: "",
+                    id: ""
+                }
+            })
             axios(ref.eventDataDevice + day).then(res => {
                 if (res.success) {
-                    let data = res.data; 
+                    let data = res.data;
+                    this.attackComponents = data.map(function (elem) {
+                        return {
+                            nameL: elem.name,
+                            value: elem.total,
+                            date: elem.stateDate,
+                            id: elem.id
+                        }
+                    })
                 }
             })
         },

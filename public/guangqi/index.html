@@ -173,7 +173,7 @@
                     <img src="./image/jianbian.png" alt="" class="jianbian">
                     <div class="nanshabox">
                         <cbox>
-                            <img src="./image/nansha.png" alt="南沙群岛" class="nansha">
+                            <img slot="main" src="./image/nansha.png" alt="南沙群岛" class="nansha">
                         </cbox>
                     </div>
                     <div class="attack-map-list">
@@ -183,7 +183,7 @@
                                     <span>攻击</span>
                                     <span>被攻击</span>
                                 </div>
-                                <div class="attack-map-item" v-for="item in attackMapList" :key="item.id">
+                                <div class="attack-map-item map-active" v-for="item in attackMapList" :key="item.id">
                                     <span>{{item.srcName}}</span>
                                     <span>{{item.dstName}}</span>
                                 </div>

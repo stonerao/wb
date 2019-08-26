@@ -442,3 +442,16 @@
     width:50%; 
     text-indent:10px;
 }
+.map-active{
+    animation:mapsc 2s;
+    
+}
+@keyframes mapsc {
+    from {
+        color:#ffbc4b;
+    }
+
+    to {
+        left:#fff;
+    }
+}

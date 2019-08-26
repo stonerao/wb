@@ -232,6 +232,9 @@ var initMap = function ({
                     var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random() > 0.9);
                     var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
                     var srcNode = cityPositions[~~(Math.random() * cityPositions.length)]
+                    if (!dstNode||!srcNode){
+                        return false
+                    }
                     var dst = projection(dstNode.cp);
                     var src = projection(srcNode.cp);
                     //攻击展示
