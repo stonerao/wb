@@ -182,7 +182,7 @@ var VM = new Vue({
                 //每次产生攻击后的回调函数 
                 if (_this.attackMapList.length > 5) {
                     _this.attackMapList.shift();
-                }
+                } 
                 _this.attackMapList.push({
                     srcName: data.src.name,
                     dstName: data.dst.name,
