@@ -182,10 +182,12 @@
                                 <div class="attack-map-item">
                                     <span>攻击</span>
                                     <span>被攻击</span>
+                                    <span style="min-width:250px">类型</span>
                                 </div>
                                 <div class="attack-map-item map-active" v-for="item in attackMapList" :key="item.id">
                                     <span>{{item.srcName}}</span>
                                     <span>{{item.dstName}}</span>
+                                    <span style="min-width:250px">{{item.type}}</span>
                                 </div>
                             </div>
                         </cbox>
@@ -208,7 +210,7 @@
                                         <td>攻击类型</td>
                                         <td>车辆所在</td>
                                         <td>时间</td>
-                                        <td>攻击</td>
+                                        <!-- <td>攻击</td> -->
                                         <td>被攻击</td>
                                     </tr>
                                 </thead>
@@ -229,7 +231,7 @@
                                         <td v-html="item.type"></td>
                                         <td v-html="item.address"></td>
                                         <td v-html="item.date"></td>
-                                        <td v-html="item.src"></td>
+                                        <!-- <td v-html="item.src"></td> -->
                                         <td v-html="item.dst"></td>
                                     </tr>
                                 </tbody>

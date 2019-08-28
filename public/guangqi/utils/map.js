@@ -196,6 +196,42 @@ var initMap = function ({
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);
     }
+    this.typesItems = [];
+    this.updateTypes = function (items) {
+        this.typesItems = items;
+    }
+    this.attckCity = function (opt) {
+        //攻击 被攻击 当前地区被攻击
+        //如果=攻击城市为空随机攻击城市
+        var dst = cityPositions.filter(elem => elem.province == opt.dst)[0];
+        var src;
+        if (opt.src) {
+            src = cityPositions.filter(elem => elem.province == opt.src)[0];
+        } else {
+            src = cityPositions[parseInt(cityPositions.length * Math.random())]
+        }
+        if (!src || !dst) {
+            return false
+        }
+        var _dst = projection(dst.cp);
+        var _src = projection(src.cp);
+        //攻击展示
+
+
+        let type = this.typesItems.filter(elem=>elem.name==opt.type);
+        if (src.province != dst.province) {
+            // 不相同 攻击线
+            this.createAttack({
+                src: [..._src, 0],
+                dst: [..._dst, 0]
+            }, type[0] ? type[0].grade:1);
+            this.addAttackPlane([..._dst, -15], 1, 1000);
+        } else {
+            //闪点
+            this.addAttackPlane([..._dst, -15], 1, 1000);
+        }
+        typeof attackCallBack === 'function' ? attackCallBack({ src: src, dst: dst, type: opt.type }) : null;
+    }
     this.update = function (data) {
         //更新数据
         currData.features.forEach(function (elem) {
@@ -232,17 +268,17 @@ var initMap = function ({
                     var dataFilter = cityPositions.filter(x => x.total != 0 && x.total && x.total * Math.random() > 0.9);
                     var dstNode = dataFilter[~~(dataFilter.length * Math.random())];
                     var srcNode = cityPositions[~~(Math.random() * cityPositions.length)]
-                    if (!dstNode||!srcNode){
+                    if (!dstNode || !srcNode) {
                         return false
                     }
-                    var dst = projection(dstNode.cp);
-                    var src = projection(srcNode.cp);
-                    //攻击展示
-                    _this.addAttackPlane([...dst, -15], 1, 1000);
-                    _this.createAttack({
-                        src: [...src, 0],
-                        dst: [...dst, 0]
-                    }, 1);
+                    // var dst = projection(dstNode.cp);
+                    // var src = projection(srcNode.cp);
+                    // //攻击展示
+                    // _this.addAttackPlane([...dst, -15], 1, 1000);
+                    // _this.createAttack({
+                    //     src: [...src, 0],
+                    //     dst: [...dst, 0]
+                    // }, 1);
                     //攻击图标
                     /* var t = typeAttack[index % (typeAttack.length - 1)];
                     _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
@@ -253,7 +289,7 @@ var initMap = function ({
                         })
                     }) */
                     // 
-                    typeof attackCallBack === 'function' ? attackCallBack({ src: srcNode, dst: dstNode }) : null;
+
                 }
                 index++
             }, 300);
@@ -500,7 +536,7 @@ var initMap = function ({
             _this.dispose(plane);
         })
     }
-    this.createAttack = function (options) {
+    this.createAttack = function (options,grade) {
         //创建攻击
         if (typeof options !== 'object') {
             return;
@@ -516,7 +552,7 @@ var initMap = function ({
         );
         var texture = new THREE.TextureLoader().load("./image/line.png");
         var points = curve.getPoints(50);
-        var c = Math.random() < 0.3 ? new THREE.Color("#ff0000") : Math.random() < 0.7 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
+        var c = grade == 3 ? new THREE.Color("#ff0000") : grade==2 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
         var mesh_line = new MeshLineMaterial({
             color: c,
             opacity: 1,

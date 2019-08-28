@@ -93,17 +93,17 @@ var VM = new Vue({
     components: {
         cbox: box
     },
-    created(){
+    created() {
         let urlParms = this.getRequest();
         if (urlParms.hasOwnProperty("day")) {
             let day = urlParms.day;
-            this.selectDay = parseInt(day) === NaN ? 30 : parseInt(day); 
+            this.selectDay = parseInt(day) === NaN ? 30 : parseInt(day);
         }
     },
     mounted() {
         let _this = this;
-        
-        
+
+
         document.querySelector(".l-loding").remove()
         var names = [
             '待选项的IP包（一）',
@@ -182,10 +182,11 @@ var VM = new Vue({
                 //每次产生攻击后的回调函数 
                 if (_this.attackMapList.length > 5) {
                     _this.attackMapList.shift();
-                } 
+                }
                 _this.attackMapList.push({
                     srcName: data.src.name,
                     dstName: data.dst.name,
+                    type:data.type,
                     id: attackMapIndex
                 });
                 attackMapIndex++;
@@ -208,9 +209,9 @@ var VM = new Vue({
 
         //安全事件
         //中下方
-        this.getEventType(30);
+        this.getEventType(80);
         setInterval(() => {
-            this.getEventType(30);
+            this.getEventType(80);
         }, 180000)
 
         // 左上方
@@ -319,7 +320,7 @@ var VM = new Vue({
                             address: elem.province + " " + elem.city,
                             date: GetCurrentDate(new Date(elem.eventTime)),
                             src: "",
-                            dst: "",
+                            dst: elem.province,
                             content: content,
                             color: color
 
@@ -328,7 +329,9 @@ var VM = new Vue({
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);
-                    }, 2000)
+                        // console.log(this.map.attckCity)
+                        this.map.attckCity(obj)
+                    }, 500)
                 }
             })
         },
@@ -342,8 +345,10 @@ var VM = new Vue({
                     }
                     const items = data.map(elem => ({
                         value: elem.total,
-                        name: elem.eventCategory.name
+                        name: elem.eventCategory.name,
+                        grade: elem.eventCategory.grade
                     }))
+                    this.map.updateTypes(items);
                     this.chartEventType.update(items)
                 }
             })
