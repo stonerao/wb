@@ -89,6 +89,42 @@ var VM = new Vue({
         newCar: 0,
         newEventNum: 0,
         eventTotal: 0,
+        cityIdArr:
+        {
+            '1': '黑龙江省',
+            '3': '吉林省',
+            '5': '辽宁省',
+            '7': '河北省',
+            '9': '山东省',
+            '11': '山西省',
+            '13': '河南省',
+            '15': '云南省',
+            '17': '重庆市',
+            '19': '四川省',
+            '21': '湖南省',
+            '23': '湖北省',
+            '25': '贵州省',
+            '27': '安徽省',
+            '29': '江西省',
+            '31': '江苏省',
+            '33': '福建省',
+            '35': '海南省',
+            '37': '青海省',
+            '39': '甘肃省',
+            '41': '陕西省',
+            '43': '广东省',
+            '45': '台湾省',
+            '47': '北京市',
+            '49': '天津市',
+            '51': '上海市',
+            '55': '新疆维吾尔自治区',
+            '57': '内蒙古自治区',
+            '59': '宁夏回族自治区',
+            '61': '广西壮族自治区',
+            '63': '西藏藏族自治区',
+            '65': '香港特别行政区',
+            '67': '澳门特别行政区'
+        }
     },
     components: {
         cbox: box
@@ -155,7 +191,7 @@ var VM = new Vue({
             geo: china,
             dom: dom,
             click: function (res) {
-                console.log(res);
+                // console.log(res);
                 return
                 if (res === false && _this.cityLevel === 2) {
                     //点击空白 
@@ -179,17 +215,26 @@ var VM = new Vue({
                 }
             },
             attackCallBack: function (data) {
+                // console.log(data)
+                // console.log(_this.cityIdArr);
+                for (const key in _this.cityIdArr) {
+                    const elem = _this.cityIdArr[key];
+                    if (elem == data.src.province){
+                        _this.getCityData(_this.selectDay,key)
+                    }
+
+                }
                 //每次产生攻击后的回调函数 
-                if (_this.attackMapList.length > 5) {
+                /* if (_this.attackMapList.length > 5) {
                     _this.attackMapList.shift();
                 }
                 _this.attackMapList.push({
                     srcName: data.src.name,
                     dstName: data.dst.name,
-                    type:data.type,
+                    type: data.type,
                     id: attackMapIndex
                 });
-                attackMapIndex++;
+                attackMapIndex++; */
             }
         })
 
@@ -218,7 +263,7 @@ var VM = new Vue({
         this.selectEvent();
         setInterval(() => {
             this.selectEvent();
-        }, 60000)    
+        }, 60000)
     },
     methods: {
         getRequest() {
@@ -370,9 +415,12 @@ var VM = new Vue({
                     }))
                     this.chartDayTop5.update(items);
                     //地图数据 
+                    // console.log(cloneData);
                     setTimeout(() => {
                         this.map.update(cloneData)
                     }, 2000)
+
+                    //地图 左下角
                 }
             })
         },
@@ -448,13 +496,32 @@ var VM = new Vue({
             })
         },
         getCityData(day = 7, provinceId) {
-            axios(ref.eventDataCity + day, {
-                provinceId: provinceId
-            }).then(res => {
+            axios(ref.eventDataCity + day + '?provinceId=' + provinceId).then(res => {
                 if (res.success) {
                     let data = res.data;
                 }
             })
+        },
+        setMapAttackTop(data) {
+            //地图左下 Top5
+            data = data || [];
+            // data = data.sort((a, b) => b.total - a.total).filter((e, i) => i < 5);
+            /* if (_this.attackMapList.length > 5) {
+                _this.attackMapList.shift();
+            }
+            this.attackMapList = data.map((elem)=>{
+                return {
+                    srcName: elem.province,
+
+                }
+            })
+            _this.attackMapList.push({
+                srcName: data.src.name,
+                
+                type: data.type,
+                id: attackMapIndex
+            });
+            attackMapIndex++; */
         }
     }
 })
