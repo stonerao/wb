@@ -481,6 +481,7 @@ var VM = new Vue({
                             id: elem.id
                         }
                     })
+                    console.log(this.attackComponents);
                 }
             })
         },
@@ -489,7 +490,6 @@ var VM = new Vue({
                 if (res.success) {
                     let data = res.data;
                     if(Array.isArray(data)&&data.length>=0){
-                        console.log(data)
                         data.forEach((elem)=>{
                             this.attackMapList.unshift({
                                 srcName:elem.city,
@@ -499,7 +499,6 @@ var VM = new Vue({
                                 id: elem.id
                             });
                         })
-                        console.log(this.attackMapList)
                     }
                     if (this.attackMapList.length>5){
                         this.attackMapList.splice(5, this.attackMapList.length-1)
