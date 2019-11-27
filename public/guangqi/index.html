@@ -181,13 +181,13 @@
                             <div slot="main">
                                 <div class="attack-map-item">
                                     <span>攻击</span>
-                                    <span>被攻击</span>
-                                    <span style="min-width:250px">类型</span>
+                                    <span>总数</span>
+                                    <span style="min-width:250px">时间</span>
                                 </div>
                                 <div class="attack-map-item map-active" v-for="item in attackMapList" :key="item.id">
                                     <span>{{item.srcName}}</span>
-                                    <span>{{item.dstName}}</span>
-                                    <span style="min-width:250px">{{item.type}}</span>
+                                    <span>{{item.total}}</span>
+                                    <span style="min-width:250px">{{item.date}}</span>
                                 </div>
                             </div>
                         </cbox>

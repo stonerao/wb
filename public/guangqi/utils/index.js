@@ -215,8 +215,6 @@ var VM = new Vue({
                 }
             },
             attackCallBack: function (data) {
-                // console.log(data)
-                // console.log(_this.cityIdArr);
                 for (const key in _this.cityIdArr) {
                     const elem = _this.cityIdArr[key];
                     if (elem == data.src.province){
@@ -225,16 +223,7 @@ var VM = new Vue({
 
                 }
                 //每次产生攻击后的回调函数 
-                /* if (_this.attackMapList.length > 5) {
-                    _this.attackMapList.shift();
-                }
-                _this.attackMapList.push({
-                    srcName: data.src.name,
-                    dstName: data.dst.name,
-                    type: data.type,
-                    id: attackMapIndex
-                });
-                attackMapIndex++; */
+               
             }
         })
 
@@ -499,29 +488,28 @@ var VM = new Vue({
             axios(ref.eventDataCity + day + '?provinceId=' + provinceId).then(res => {
                 if (res.success) {
                     let data = res.data;
+                    if(Array.isArray(data)&&data.length>=0){
+                        console.log(data)
+                        data.forEach((elem)=>{
+                            this.attackMapList.unshift({
+                                srcName:elem.city,
+                                // type: data.type,
+                                date: GetCurrentDate(new Date(elem.stateDate)),
+                                total:elem.total,
+                                id: elem.id
+                            });
+                        })
+                        console.log(this.attackMapList)
+                    }
+                    if (this.attackMapList.length>5){
+                        this.attackMapList.splice(5, this.attackMapList.length-1)
+                    }
                 }
             })
         },
         setMapAttackTop(data) {
             //地图左下 Top5
             data = data || [];
-            // data = data.sort((a, b) => b.total - a.total).filter((e, i) => i < 5);
-            /* if (_this.attackMapList.length > 5) {
-                _this.attackMapList.shift();
-            }
-            this.attackMapList = data.map((elem)=>{
-                return {
-                    srcName: elem.province,
-
-                }
-            })
-            _this.attackMapList.push({
-                srcName: data.src.name,
-                
-                type: data.type,
-                id: attackMapIndex
-            });
-            attackMapIndex++; */
         }
     }
 })
