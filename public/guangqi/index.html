@@ -249,37 +249,14 @@
                     </cbox>
                 </div>
                     <div class="relative g-box-mt" style="height:285px">
-                        <cbox title="概览">
-                            <div slot="main">
-                                <ul class="g-overview">
-                                    <li class="g-overview-item">
-                                        <div class="g-overview-title">{{cartTotal}}</div>
-                                        <div class="g-overview-data">
-                                            车辆总数
-                                        </div>
-                                    </li>
-                                    <li class="g-overview-item">
-                                        <div class="g-overview-title">{{newCar}}</div>
-                                        <div class="g-overview-data">
-                                            今日增加
-                                        </div>
-                                    </li>
-                                    <!-- <li class="g-overview-item">
-                                                        <div class="g-overview-title">{{newEventNum}}</div>
-                                                        <div class="g-overview-data">
-                                                            攻击车辆
-                                                        </div>
-                                                    </li> -->
-                                    <li class="g-overview-item">
-                                        <div class="g-overview-title">{{eventTotal}}</div>
-                                        <div class="g-overview-data">
-                                            累计事件
-                                        </div>
-                                    </li>
-                                    <li class="g-overview-item">
-                                        <div class="g-overview-title">{{newEventNum}}</div>
-                                        <div class="g-overview-data">
-                                            今日事件
+                        <cbox title="零部件">
+                            <div class="g-full" slot="main">
+                                <ul class="attack-c-items">
+                                    <li class="attack-c-item" v-for="item in attackComponents" :key="item.name">
+                                        <div class="ac-title" v-html="item.value"></div>
+                                        <div class="ac-data">
+                                            <img :src="item.img" alt="">
+                                            <span v-html="item.name"></span>
                                         </div>
                                     </li>
                                 </ul>
@@ -287,19 +264,37 @@
                         </cbox>
                     </div>
                 <div class="relative g-box-mt" style="height:285px">
-                    <cbox title="攻击零部件">
-                        <div class="g-full" slot="main">
-                            <ul class="attack-c-items">
-                                <li class="attack-c-item" v-for="item in attackComponents" :key="item.name">
-                                    <div class="ac-title" v-html="item.value"></div>
-                                    <div class="ac-data">
-                                        <img :src="item.img" alt="">
-                                        <span v-html="item.name"></span>
+                    <cbox title="概览">
+                        <div slot="main">
+                            <ul class="g-overview">
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">{{cartTotal}}</div>
+                                    <div class="g-overview-data">
+                                        车辆总数
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">{{newCar}}</div>
+                                    <div class="g-overview-data">
+                                        今日增加
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">{{eventTotal}}</div>
+                                    <div class="g-overview-data">
+                                        累计事件
+                                    </div>
+                                </li>
+                                <li class="g-overview-item">
+                                    <div class="g-overview-title">{{newEventNum}}</div>
+                                    <div class="g-overview-data">
+                                        今日事件
                                     </div>
                                 </li>
                             </ul>
                         </div>
                     </cbox>
+                   
                 </div>
             
             </div>
