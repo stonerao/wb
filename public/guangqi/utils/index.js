@@ -191,7 +191,13 @@ var VM = new Vue({
             geo: china,
             dom: dom,
             click: function (res) {
-                // console.log(res);
+                for (const key in _this.cityIdArr) {
+                    const elem = _this.cityIdArr[key]; 
+                    if (elem.indexOf(res.name) != -1) {
+                        _this.getCityData(_this.selectDay, key);
+                        continue;
+                    }
+                }
                 return
                 if (res === false && _this.cityLevel === 2) {
                     //点击空白 
@@ -215,15 +221,14 @@ var VM = new Vue({
                 }
             },
             attackCallBack: function (data) {
-                for (const key in _this.cityIdArr) {
+                /* for (const key in _this.cityIdArr) {
                     const elem = _this.cityIdArr[key];
                     if (elem == data.src.province){
                         _this.getCityData(_this.selectDay,key)
                     }
-
-                }
+                } */
                 //每次产生攻击后的回调函数 
-               
+
             }
         })
 
@@ -363,8 +368,7 @@ var VM = new Vue({
                     })
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
-                        this.attackList.push(obj);
-                        // console.log(this.map.attckCity)
+                        this.attackList.push(obj); 
                         this.map.attckCity(obj)
                     }, 500)
                 }
@@ -404,7 +408,6 @@ var VM = new Vue({
                     }))
                     this.chartDayTop5.update(items);
                     //地图数据 
-                    // console.log(cloneData);
                     setTimeout(() => {
                         this.map.update(cloneData)
                     }, 2000)
@@ -481,27 +484,27 @@ var VM = new Vue({
                             id: elem.id
                         }
                     })
-                    console.log(this.attackComponents);
                 }
             })
         },
         getCityData(day = 7, provinceId) {
+            this.attackMapList = [];
             axios(ref.eventDataCity + day + '?provinceId=' + provinceId).then(res => {
                 if (res.success) {
                     let data = res.data;
-                    if(Array.isArray(data)&&data.length>=0){
-                        data.forEach((elem)=>{
-                            this.attackMapList.unshift({
-                                srcName:elem.city,
+                    if (Array.isArray(data) && data.length >= 0) {
+                        data.forEach((elem) => {
+                            this.attackMapList.push({
+                                srcName: elem.city,
                                 // type: data.type,
                                 date: GetCurrentDate(new Date(elem.stateDate)),
-                                total:elem.total,
+                                total: elem.total,
                                 id: elem.id
                             });
                         })
                     }
-                    if (this.attackMapList.length>5){
-                        this.attackMapList.splice(5, this.attackMapList.length-1)
+                    if (this.attackMapList.length > 5) {
+                        this.attackMapList.splice(5, this.attackMapList.length - 1)
                     }
                 }
             })

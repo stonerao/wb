@@ -218,13 +218,13 @@ var initMap = function ({
         //攻击展示
 
 
-        let type = this.typesItems.filter(elem=>elem.name==opt.type);
+        let type = this.typesItems.filter(elem => elem.name == opt.type);
         if (src.province != dst.province) {
             // 不相同 攻击线
             this.createAttack({
                 src: [..._src, 0],
                 dst: [..._dst, 0]
-            }, type[0] ? type[0].grade:1);
+            }, type[0] ? type[0].grade : 1);
             this.addAttackPlane([..._dst, -15], 1, 1000);
         } else {
             //闪点
@@ -432,7 +432,7 @@ var initMap = function ({
         // shape.position.z -= 1000
 
         shapeGroup.add(shape);
-        svgShape.push(shape)
+        svgShape.push(shape);
         shape.userData = {
             type: "path",
             ...properties,
@@ -536,7 +536,7 @@ var initMap = function ({
             _this.dispose(plane);
         })
     }
-    this.createAttack = function (options,grade) {
+    this.createAttack = function (options, grade) {
         //创建攻击
         if (typeof options !== 'object') {
             return;
@@ -552,7 +552,7 @@ var initMap = function ({
         );
         var texture = new THREE.TextureLoader().load("./image/line.png");
         var points = curve.getPoints(50);
-        var c = grade == 3 ? new THREE.Color("#ff0000") : grade==2 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
+        var c = grade == 3 ? new THREE.Color("#ff0000") : grade == 2 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
         var mesh_line = new MeshLineMaterial({
             color: c,
             opacity: 1,
@@ -849,7 +849,7 @@ var initMap = function ({
         svgGroups.add(planeGroup)
         svgGroups.add(lineGroup)
         svgGroups.add(shapeGroup)
-        _this.currCanvas.addEventListener("dblclick", onMouseUp)
+        _this.currCanvas.addEventListener("click", onMouseUp)
     }
     this.load();
 
