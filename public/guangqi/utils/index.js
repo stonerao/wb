@@ -89,6 +89,7 @@ var VM = new Vue({
         newCar: 0,
         newEventNum: 0,
         eventTotal: 0,
+        selectCity: "",
         cityIdArr:
         {
             '1': '黑龙江省',
@@ -175,12 +176,20 @@ var VM = new Vue({
                 value: parseInt(Math.random() * 2500)
             }
         })
+        // top5
         this.chartDayTop5 = new initBarList({
             id: "daily",
             data: dailyDatas,
             color: "#ff8d36",
             dstColor: "#ffea61"
         })
+        this.parts = new initBarList2({
+            id: "attackComm",
+            data: dailyDatas,
+            color: "#ff8d36",
+            dstColor: "#ffea61"
+        })
+
         /* map */
         var dom = document.getElementById("map");
         this.currAdr = "china";
@@ -192,8 +201,9 @@ var VM = new Vue({
             dom: dom,
             click: function (res) {
                 for (const key in _this.cityIdArr) {
-                    const elem = _this.cityIdArr[key]; 
+                    const elem = _this.cityIdArr[key];
                     if (elem.indexOf(res.name) != -1) {
+                        _this.selectCity = key;
                         _this.getCityData(_this.selectDay, key);
                         continue;
                     }
@@ -237,6 +247,7 @@ var VM = new Vue({
             _this.chartEventType.resize();
             _this.chartAttackEvent.resize();
             _this.chartDayTop5.resize();
+            _this.parts.resize();
         })
 
 
@@ -368,7 +379,7 @@ var VM = new Vue({
                     })
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
-                        this.attackList.push(obj); 
+                        this.attackList.push(obj);
                         this.map.attckCity(obj)
                     }, 500)
                 }
@@ -405,7 +416,16 @@ var VM = new Vue({
                     const items = data.map(elem => ({
                         value: elem.total,
                         name: elem.province
-                    }))
+                    })).sort((a, b) => b.value - a.value);
+                    const cityName = items[0].name;
+                    for (const key in this.cityIdArr) {
+                        const elem = this.cityIdArr[key];
+                        if (elem.indexOf(cityName) != -1) {
+                            this.selectCity = key;
+                            this.getCityData(this.selectDay, key);
+                            continue;
+                        }
+                    }
                     this.chartDayTop5.update(items);
                     //地图数据 
                     setTimeout(() => {
@@ -478,12 +498,17 @@ var VM = new Vue({
                     let data = res.data;
                     this.attackComponents = data.map(function (elem) {
                         return {
-                            nameL: elem.name,
+                            name: elem.name,
                             value: elem.total,
                             date: elem.stateDate,
                             id: elem.id
                         }
                     })
+                    if (this.attackComponents.length > 5) {
+                        this.attackComponents.splice(5, this.attackComponents.length)
+                    }
+                    // this.attackComponents = this.attackComponents.sort((a,b)=>a.value-b.value);
+                    this.parts.update(this.attackComponents);
                 }
             })
         },

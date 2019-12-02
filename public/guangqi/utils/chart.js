@@ -145,6 +145,131 @@ function initBarList({
         myChart.resize();
     }
 }
+function initBarList2({
+    id, data,
+    color, dstColor
+}) {
+    if (!echarts) {
+        return console.error("not echarts!")
+    }
+    var xdata = [];
+    var ydata = [];
+    var values = data.sort((a, b) => {
+        return a.value - b.value
+    })
+    for (let i = 0; i < values.length; i++) {
+        var elem = values[i];
+        xdata.push(elem.value);
+        if (elem.name) ydata.push(elem.name);
+    }
+    // max number
+    var max = Math.max.apply(null, xdata)
+    function returnOption(xdata, ydata) {
+        data = data || [];
+        return {
+            // backgroundColor: '#000',
+            tooltip: {},
+            grid: {
+                top: 0,
+                right: 0,
+                bottom: 30,
+                left: 0
+            },
+
+            xAxis: {
+                data: ydata,       //横坐标
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    // rotate: 25,
+                    textStyle: {
+                        color: '#fff',
+                        fontSize: 14,
+                    }
+                },
+                axisLine: {
+                    lineStyle: {
+                        type: 'dashed',
+                        color: '#18304f',
+                        width: '1',                                                //坐标线的宽度
+
+                    }
+                },
+            },
+            yAxis: {
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#18304f',                                         //网格横线颜色
+                        width: 1,
+                        type: 'dashed'
+                    }
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#fff',
+                        fontSize: 24,//坐标值得具体的颜色
+                    }
+                },
+                axisLine: {
+                    show: false,
+                },
+            },
+            series: [{
+                name: '零部件',
+                type: 'bar',
+                barWidth: 10,
+                data: xdata,        //数据
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'top',
+                        color: "#fff",
+                        formatter: "{c}"
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        show: true,
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                            offset: 0,
+                            color: color
+                        }, {
+                            offset: 1,
+                            color: dstColor
+                        }]),
+                        barBorderRadius: 3,
+                        borderWidth: 0,
+                        borderColor: '#333',
+                    },
+
+                },
+            }]
+        };
+    }
+    var option = returnOption(xdata, ydata)
+    var myChart = echarts.init(document.getElementById(id));
+    myChart.setOption(option);
+    this.update = function (data) {
+        var xdata = [];
+        var ydata = [];
+        var values = data.sort((a, b) => {
+            return b.value - a.value
+        })
+        for (let i = 0; i < values.length; i++) {
+            var elem = values[i];
+            xdata.push(elem.value);
+            if (elem.name) ydata.push(elem.name);
+        }
+        var option = returnOption(xdata, ydata);
+        myChart.setOption(option);
+    }
+    this.resize = function () {
+        myChart.resize();
+    }
+}
 function initLineList({
     id, data
 }) {
@@ -155,8 +280,8 @@ function initLineList({
      */
     function returnOption(data) {
         data = data || [];
-        let values=[],names=[];
-        data.forEach(elem=>{
+        let values = [], names = [];
+        data.forEach(elem => {
             values.push(elem.value);
             names.push(elem.name);
         })
@@ -272,7 +397,7 @@ function initLineList({
     this.resize = function () {
         myChart.resize();
     }
-    this.update=function(data){
+    this.update = function (data) {
         var option = returnOption(data);
         myChart.setOption(option);
     }

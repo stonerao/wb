@@ -180,14 +180,14 @@
                         <cbox>
                             <div slot="main">
                                 <div class="attack-map-item">
-                                    <span>攻击</span>
+                                    <span>城市</span>
                                     <span>总数</span>
-                                    <span style="min-width:220px">时间</span>
+                                    <!-- <span style="min-width:220px">时间</span> -->
                                 </div>
                                 <div class="attack-map-item map-active" v-for="item in attackMapList" :key="item.id">
                                     <span>{{item.srcName}}</span>
                                     <span>{{item.total}}</span>
-                                    <span style="min-width:220px">{{item.date}}</span>
+                                    <!-- <span style="min-width:220px">{{item.date}}</span> -->
                                 </div>
                             </div>
                         </cbox>
@@ -243,27 +243,7 @@
             </div>
             <!-- right -->
             <div class="g-right">
-                <div class="relative" style="height:350px">
-                    <cbox title="攻击来源TOP5">
-                        <div class="g-full" slot="main" id="daily"></div>
-                    </cbox>
-                </div>
-                    <div class="relative g-box-mt" style="height:285px">
-                        <cbox title="零部件">
-                            <div class="g-full" slot="main">
-                                <ul class="attack-c-items">
-                                    <li class="attack-c-item" v-for="item in attackComponents" :key="item.name">
-                                        <div class="ac-title" v-html="item.value"></div>
-                                        <div class="ac-data">
-                                            <img :src="item.img" alt="">
-                                            <span v-html="item.name"></span>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </cbox>
-                    </div>
-                <div class="relative g-box-mt" style="height:285px">
+                <div class="relative" style="height:285px">
                     <cbox title="概览">
                         <div slot="main">
                             <ul class="g-overview">
@@ -294,7 +274,28 @@
                             </ul>
                         </div>
                     </cbox>
-                   
+                    
+                </div>
+                    <div class="relative g-box-mt" style="height:285px">
+                        <cbox title="零部件">
+                            <!-- <div class="g-full" slot="main">
+                                <ul class="attack-c-items">
+                                    <li class="attack-c-item" v-for="item in attackComponents" :key="item.name">
+                                        <div class="ac-title" v-html="item.value"></div>
+                                        <div class="ac-data">
+                                            <img :src="item.img" alt="">
+                                            <span v-html="item.name"></span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div> -->
+                            <div class="g-full" slot="main" id="attackComm"></div>
+                        </cbox>
+                    </div>
+                <div class="relative g-box-mt" style="height:350px">
+                    <cbox title="攻击来源TOP5">
+                        <div class="g-full" slot="main" id="daily"></div>
+                    </cbox>
                 </div>
             
             </div>
