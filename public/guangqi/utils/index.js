@@ -90,6 +90,7 @@ var VM = new Vue({
         newEventNum: 0,
         eventTotal: 0,
         selectCity: "",
+        attackNumber: 50,// 攻击个数
         cityIdArr:
         {
             '1': '黑龙江省',
@@ -209,26 +210,6 @@ var VM = new Vue({
                     }
                 }
                 return
-                if (res === false && _this.cityLevel === 2) {
-                    //点击空白 
-                    setTimeout(() => {
-                        _this.cityLevel = 1;
-                    }, 2000)
-                    _this.map.cityLevel = 1
-                    _this.map.createMap({
-                        geo: china
-                    })
-                } else if (_this.cityLevel === 1 && res !== false) {
-                    _this.getJson(res.id, function (data) {
-                        _this.map.cityLevel = 2;
-                        _this.cityLevel = 2;
-                        if (data) {
-                            _this.map.createMap({
-                                geo: data
-                            })
-                        }
-                    })
-                }
             },
             attackCallBack: function (data) {
                 /* for (const key in _this.cityIdArr) {
@@ -259,9 +240,9 @@ var VM = new Vue({
 
         //安全事件
         //中下方
-        this.getEventType(30);
+        this.getEventType(this.attackNumber);
         setInterval(() => {
-            this.getEventType(30);
+            this.getEventType(this.attackNumber);
         }, 60000)
 
         // 左上方
@@ -271,6 +252,31 @@ var VM = new Vue({
         }, 60000)
     },
     methods: {
+        getCity(val, type) {
+            // 根据城市ID或者城市名找到当前的name 和 id
+            // type 1 根据ID 查找  type 2 根据name查找
+            let obj = null;
+            for (let key in this.cityIdArr) {
+                let isMatch = false;
+                if (type == 1) {
+                    if (key == val) {
+                        isMatch = true;
+                    }
+                } else {
+                    if (this.cityIdArr[key] == val) {
+                        isMatch = true;
+                    }
+                }
+                if (isMatch) {
+                    obj = {
+                        id: key,
+                        name: this.cityIdArr[key]
+                    }
+                    continue
+                }
+            }
+            return obj
+        },
         getRequest() {
             var url = location.search; //获取url中"?"符后的字串  
             var theRequest = new Object();
@@ -334,20 +340,7 @@ var VM = new Vue({
                 if (res.success) {
                     if (this.itemsAnimatList) clearInterval(this.itemsAnimatList);
                     const data = res.data;
-                    /* 
-                    {
-                        id: index + 1,
-                        vin: "LS5A3ADE0AB046791",
-                        code: "421Ads",
-                        ip: "255.255.255.255",
-                        type: "设置ACK和RST标志位的dos攻击",
-                        address: "四川省 达州市",
-                        date: "2019-7-24 21:31:36",
-                        src: "四川",
-                        dst: "上海"
-                    } 
-                    */
-                    this.attackList = data.map(function (elem, index) {
+                    this.attackList = data.map( (elem, index)=> {
                         var content = "";
                         try {
                             content = JSON.parse(elem.content);
@@ -373,10 +366,18 @@ var VM = new Vue({
                             src: "",
                             dst: elem.province,
                             content: content,
-                            color: color
-
+                            color: color,
+                            // provinceIdSrc: this.getCity(17, 1).id,
+                            provinceIdSrc: elem.provinceIdSrc,
+                            provinceSrc: elem.provinceSrc,
+                            // provinceSrc: this.getCity(17, 1).name,
+                            provinceId: elem.provinceId,
+                            cityId: elem.cityId,
+                            cityIdSrc: elem.cityIdSrc,
+                            citySrc: elem.citySrc,
                         }
                     })
+                    // console.log(this.attackList)
                     this.itemsAnimatList = setInterval(() => {
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);

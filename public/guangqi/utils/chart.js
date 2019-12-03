@@ -220,7 +220,7 @@ function initBarList2({
             series: [{
                 name: '零部件',
                 type: 'bar',
-                barWidth: 10,
+                barWidth: 20,
                 data: xdata,        //数据
                 label: {
                     normal: {
@@ -233,7 +233,7 @@ function initBarList2({
                 itemStyle: {
                     normal: {
                         show: true,
-                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                             offset: 0,
                             color: color
                         }, {

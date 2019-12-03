@@ -201,15 +201,24 @@ var initMap = function ({
         this.typesItems = items;
     }
     this.attckCity = function (opt) {
-        //攻击 被攻击 当前地区被攻击
+        // 车辆所在和攻击所在Id都为0 则不攻击
+        // console.log(opt)
+        if (opt.provinceIdSrc == 0 && opt.cityIdSrc == 0) {
+            return false;
+        }
+        // console.log(opt.)
+        if (opt.provinceIdSrc != 0 && opt.cityIdSrc == 0) {
+
+        }
         //如果=攻击城市为空随机攻击城市
         var dst = cityPositions.filter(elem => elem.province == opt.dst)[0];
         var src;
         if (opt.src) {
             src = cityPositions.filter(elem => elem.province == opt.src)[0];
-        } else {
-            src = cityPositions[parseInt(cityPositions.length * Math.random())]
+        }else{
+            src = dst;
         }
+
         if (!src || !dst) {
             return false
         }
