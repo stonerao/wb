@@ -200,24 +200,33 @@ var initMap = function ({
     this.updateTypes = function (items) {
         this.typesItems = items;
     }
+    function getVec2(name) {
+        return cityPositions.filter(elem => name.indexOf(elem.name) != -1)[0];
+    }
     this.attckCity = function (opt) {
         // 车辆所在和攻击所在Id都为0 则不攻击
-        // console.log(opt)
-        if (opt.provinceIdSrc == 0 && opt.cityIdSrc == 0) {
+        // 起始 结束 都未0 择不进行攻击
+        if (opt.provinceIdSrc == 0 && opt.provinceId == 0) {
             return false;
         }
-        // console.log(opt.)
-        if (opt.provinceIdSrc != 0 && opt.cityIdSrc == 0) {
-
+        let src, dst;
+        let _type = 0;
+        if (opt.provinceIdSrc != 0 && opt.provinceId == 0) {
+            // 起始有 终点无 
+            src = getVec2(opt.src);
+            dst = src;
+            _type = 1;
+        } else if (opt.provinceIdSrc == 0 && opt.provinceId != 0) {
+            // 起始无 终点有
+            dst = getVec2(opt.dst);
+            src = dst;
+            _type = 2;
+        } else {
+            src = getVec2(opt.src);
+            dst = getVec2(opt.dst);
+            _type = 3;
         }
         //如果=攻击城市为空随机攻击城市
-        var dst = cityPositions.filter(elem => elem.province == opt.dst)[0];
-        var src;
-        if (opt.src) {
-            src = cityPositions.filter(elem => elem.province == opt.src)[0];
-        }else{
-            src = dst;
-        }
 
         if (!src || !dst) {
             return false
@@ -228,17 +237,16 @@ var initMap = function ({
 
 
         let type = this.typesItems.filter(elem => elem.name == opt.type);
-        if (src.province != dst.province) {
-            // 不相同 攻击线
+        // 攻击线
+        let sType = _type == 3 ? type[0].grade + 2 : _type;
+        if (_type < 3) {
             this.createAttack({
                 src: [..._src, 0],
                 dst: [..._dst, 0]
-            }, type[0] ? type[0].grade : 1);
-            this.addAttackPlane([..._dst, -15], 1, 1000);
-        } else {
-            //闪点
-            this.addAttackPlane([..._dst, -15], 1, 1000);
+            }, sType);
         }
+        // 扩散点
+        this.addAttackPlane([..._dst, -15], 1, 1000);
         typeof attackCallBack === 'function' ? attackCallBack({ src: src, dst: dst, type: opt.type }) : null;
     }
     this.update = function (data) {
@@ -561,7 +569,21 @@ var initMap = function ({
         );
         var texture = new THREE.TextureLoader().load("./image/line.png");
         var points = curve.getPoints(50);
-        var c = grade == 3 ? new THREE.Color("#ff0000") : grade == 2 ? new THREE.Color("rgb(255,229,94)") : new THREE.Color("#94ffab");
+        var c = new THREE.Color("#ff0000");
+        switch (grade) {
+            case 1:
+                c = new THREE.Color("rgb(255,229,94)");
+                break;
+            case 2:
+                c = new THREE.Color("#94ffab");
+                break;
+            case 3:
+                c = new THREE.Color("#99FFFF")
+                break;
+            case 4:
+                c = new THREE.Color("#663366")
+                break;
+        }
         var mesh_line = new MeshLineMaterial({
             color: c,
             opacity: 1,
@@ -569,7 +591,7 @@ var initMap = function ({
             //    map: texture,
             //         useMap: 1.0, 
             sizeAttenuation: 1,
-            lineWidth: 6,
+            lineWidth: grade < 3 ? 6 : 12,
             near: 1,
             far: 100000,
             depthTest: false,
