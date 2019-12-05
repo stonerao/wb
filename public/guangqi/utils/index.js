@@ -212,13 +212,6 @@ var VM = new Vue({
                 return
             },
             attackCallBack: function (data) {
-                /* for (const key in _this.cityIdArr) {
-                    const elem = _this.cityIdArr[key];
-                    if (elem == data.src.province){
-                        _this.getCityData(_this.selectDay,key)
-                    }
-                } */
-                //每次产生攻击后的回调函数 
 
             }
         })
@@ -419,13 +412,17 @@ var VM = new Vue({
                         name: elem.province
                     })).sort((a, b) => b.value - a.value);
                     const cityName = items[0].name;
-                    for (const key in this.cityIdArr) {
-                        const elem = this.cityIdArr[key];
-                        if (elem.indexOf(cityName) != -1) {
-                            this.selectCity = key;
-                            this.getCityData(this.selectDay, key);
-                            continue;
+                    if (!this.selectCity){
+                        for (const key in this.cityIdArr) {
+                            const elem = this.cityIdArr[key];
+                            if (elem.indexOf(cityName) != -1) {
+                                this.selectCity = key;
+                                this.getCityData(this.selectDay, this.selectCity);
+                                continue;
+                            }
                         }
+                    }else{
+                        this.getCityData(this.selectDay, this.selectCity);
                     }
                     this.chartDayTop5.update(items);
                     //地图数据 
