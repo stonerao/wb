@@ -560,12 +560,24 @@ var initMap = function ({
         }
         var src = options.src;
         var dst = options.dst;
-        var curve = new THREE.CatmullRomCurve3(
-            [
+        var _Paths = [];
+        if (String(src) == String(dst)) {
+            _Paths = [
+                new THREE.Vector3(src[0], src[1], src[2]), 
+                new THREE.Vector3(dst[0] + 10, dst[1] - 5, -60),
+                new THREE.Vector3(dst[0] + 2, dst[1] - 4, -60),
+                new THREE.Vector3(dst[0] - 5, dst[1] + 5, -60),
+                new THREE.Vector3(dst[0], dst[1], dst[2])
+            ]
+        } else {
+            _Paths = [
                 new THREE.Vector3(src[0], src[1], src[2]),
                 new THREE.Vector3((src[0] + dst[0]) / 2, (src[1] + dst[1]) / 2, -60),
                 new THREE.Vector3(dst[0], dst[1], dst[2])
             ]
+        }
+        var curve = new THREE.CatmullRomCurve3(
+            _Paths
         );
         var texture = new THREE.TextureLoader().load("./image/line.png");
         var points = curve.getPoints(50);
