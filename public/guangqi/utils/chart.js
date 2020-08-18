@@ -170,7 +170,7 @@ function initBarList2({
             // backgroundColor: '#000',
             tooltip: {},
             grid: {
-                top: 0,
+                top: 30,
                 right: 0,
                 bottom: 30,
                 left: 0

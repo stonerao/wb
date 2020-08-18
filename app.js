@@ -11,6 +11,22 @@ const users = require('./routes/users')
 const httpProxy = require('http-proxy-middleware');
 const k2c = require('koa2-connect');
 // error handler 
+// 广汽
+/* app.use(async (ctx, next) => {
+  if (ctx.url.startsWith('/SOC')) { //匹配有api字段的请求url
+    ctx.respond = false // 绕过koa内置对象response ，写入原始res对象，而不是koa处理过的response
+    await k2c(httpProxy({
+      target: 'http://10.0.9.63:8080/',
+      changeOrigin: true,
+      secure: false,
+      pathRewrite: {
+        '^/': ''
+      }
+    }
+    ))(ctx, next);
+  }
+  await next()
+}) */
 app.use(async (ctx, next) => {
   if (ctx.url.startsWith('/SOC')) { //匹配有api字段的请求url
     ctx.respond = false // 绕过koa内置对象response ，写入原始res对象，而不是koa处理过的response
@@ -25,7 +41,7 @@ app.use(async (ctx, next) => {
     ))(ctx, next);
   }
   await next()
-})
+}) 
 // error handler
 onerror(app)
 

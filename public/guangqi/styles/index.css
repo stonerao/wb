@@ -362,14 +362,14 @@
 }
 
 .g-atballe td {
-    padding: 0 5px;
+    padding: 0 1px;
 
 }
 
 .g-atballe thead,
 .g-atballe tbody {
     text-align: center;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .g-atballe tbody {

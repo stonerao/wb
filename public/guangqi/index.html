@@ -101,6 +101,7 @@
     </style>
     <link rel="stylesheet" href="./styles/reset.css">
     <link rel="stylesheet" href="./styles/index.css">
+    <script src="./utils/config.js"></script>
     <script src="./utils/data.js"></script>
     <script src="./libs/echarts.min.js"></script>
     <script src="./libs/d3.min.js"></script>
@@ -109,6 +110,7 @@
     <script src="./js/utils/SceneUtils.js"></script>
     <script src="./libs/d3-threeD.js"></script>
     <script src="./libs/vue.min.js"></script>
+    <script src="./libs/jquery.js"></script>
     <script src="./utils/chart.js"></script>
     <script src="./utils/map.js"></script>
     <script src="./utils/THREE.MeshLine.js"></script>
@@ -134,7 +136,7 @@
     <div id="app">
         <!-- header -->
         <div class="g-header">
-            <div class="g-header-title">{{title}}</div>
+            <div class="g-header-title">{{infos.title}}</div>
             <div class="g-header-time" v-html="date">
 
             </div>
@@ -144,12 +146,12 @@
             <!-- left -->
             <div class="g-left">
                 <div class="relative g-bc" style="height:610px">
-                    <cbox title="安全事件类型">
+                    <cbox :title="infos.eventType">
                         <div class="g-full" slot="main" id="eventType"></div>
                     </cbox>
                 </div>
                 <div class="g-box-mt relative" style="height:340px">
-                    <cbox title="攻击事件（次）">
+                    <cbox :title="infos.attackEvent">
                         <div class="g-full" slot="main" id="attackEvent"></div>
                     </cbox>
                 </div>
@@ -187,7 +189,6 @@
                                 <div class="attack-map-item map-active" v-for="item in attackMapList" :key="item.id">
                                     <span>{{item.srcName}}</span>
                                     <span>{{item.total}}</span>
-                                    <!-- <span style="min-width:220px">{{item.date}}</span> -->
                                 </div>
                             </div>
                         </cbox>
@@ -196,43 +197,45 @@
                 <div class="relative" style="height:281px">
                     <div class="g-scroll-list">
                         <img src="./image/board.png" alt="">
-                        <span>攻击滚动实时展示列表</span>
+                        <span>{{infos.scrollList}}</span>
                     </div>
                     <cbox>
                         <div class="g-full g-atballe-pad" style="overflow: hidden" slot="main">
                             <table class="g-atballe">
                                 <thead>
                                     <tr>
-                                        <td>序号</td>
-                                        <td>VIN</td>
-                                        <td>设备编号</td>
-                                        <td>攻击IP</td>
-                                        <td>攻击类型</td>
-                                        <td>车辆所在</td>
-                                        <td>时间</td>
-                                        <!-- <td>攻击</td> -->
-                                        <td>被攻击</td>
+                                        <td class="text-over">{{infos.sort}}</td>
+                                        <td class="text-over">{{infos.vin}}</td>
+                                        <td class="text-over">{{infos.code}}</td>
+                                        <td class="text-over">{{infos.ip}}</td>
+                                        <td class="text-over">{{infos.attackType}}</td>
+                                        <td class="text-over">{{infos.carIn}}</td>
+                                        <td class="text-over">{{infos.date}}</td>
+                                        <td class="text-over">{{infos.target}}</td>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="(item,index) in attackList" :class="item.color||''" :key="item.id">
-                                        <td v-html="item.id"></td>
-                                        <td>
-                                            <span class="text-over items-over" style="width:130px;" v-html="item.vin">
+                                        <td class="text-over">
+                                            <span class="text-over items-over" style="width:30px;" v-html="item.id" @mouseup="tipsMoveUp">
                                                 <a href=""></a>
                                             </span>
                                         </td>
-                                        <td v-html="item.code"></td>
-                                        <td>
-                                            <span class="text-over items-over" style="width:130px;" v-html="item.ip">
+                                        <td class="text-over"   @mouseover="tipsMoveUp(item.vin, $event)" @mouseout='tipsMoveOut'>
+                                            <span class="text-over items-over" style="width:170px;" v-html="item.vin">
                                                 <a href=""></a>
                                             </span>
                                         </td>
-                                        <td v-html="item.type"></td>
-                                        <td v-html="item.address"></td>
-                                        <td v-html="item.date"></td>
-                                        <!-- <td v-html="item.src"></td> -->
-                                        <td v-html="item.dst"></td>
+                                        <td v-html="item.code" class="text-over"></td>
+                                        <td class="text-over"  @mouseover="tipsMoveUp(item.sip, $event)" @mouseout='tipsMoveOut'>
+                                            <span class="text-over items-over" style="width:120px;" v-html="item.sip">
+                                                <a href=""></a>
+                                            </span>
+                                        </td>
+                                        <td v-html="item.type" class="text-over" ></td>
+                                        <td class="text-over"  @mouseover="tipsMoveUp(`${item.province} ${item.city}`, $event)" @mouseout='tipsMoveOut'>{{item.province}} {{item.city}}</td>
+                                        <td v-html="item.date" class="text-over" @mouseover="tipsMoveUp(item.date, $event)" @mouseout='tipsMoveOut'></td>
+                                        <td class="text-over" @mouseover="tipsMoveUp(`${item.provinceSrc} ${item.citySrc}`, $event)" @mouseout='tipsMoveOut'>{{item.provinceSrc}} {{item.citySrc}}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -244,31 +247,31 @@
             <!-- right -->
             <div class="g-right">
                 <div class="relative" style="height:285px">
-                    <cbox title="概览">
+                    <cbox :title="infos.overview">
                         <div slot="main">
                             <ul class="g-overview">
                                 <li class="g-overview-item">
                                     <div class="g-overview-title">{{cartTotal}}</div>
                                     <div class="g-overview-data">
-                                        车辆总数
+                                        {{infos.carTotal}}
                                     </div>
                                 </li>
                                 <li class="g-overview-item">
                                     <div class="g-overview-title">{{newCar}}</div>
                                     <div class="g-overview-data">
-                                        今日增加
+                                        {{infos.dayAdd}}
                                     </div>
                                 </li>
                                 <li class="g-overview-item">
                                     <div class="g-overview-title">{{eventTotal}}</div>
                                     <div class="g-overview-data">
-                                        累计事件
+                                        {{infos.eventTotal}}
                                     </div>
                                 </li>
                                 <li class="g-overview-item">
                                     <div class="g-overview-title">{{newEventNum}}</div>
                                     <div class="g-overview-data">
-                                        今日事件
+                                        {{infos.dayEvent}}
                                     </div>
                                 </li>
                             </ul>
@@ -277,7 +280,7 @@
                     
                 </div>
                     <div class="relative g-box-mt" style="height:285px">
-                        <cbox title="零部件">
+                        <cbox :title="infos.component">
                             <!-- <div class="g-full" slot="main">
                                 <ul class="attack-c-items">
                                     <li class="attack-c-item" v-for="item in attackComponents" :key="item.name">
@@ -293,7 +296,7 @@
                         </cbox>
                     </div>
                 <div class="relative g-box-mt" style="height:350px">
-                    <cbox title="攻击来源TOP5">
+                    <cbox :title="infos.targetTop5">
                         <div class="g-full" slot="main" id="daily"></div>
                     </cbox>
                 </div>

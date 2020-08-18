@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./axios.min.js"></script>
+    <script src="./index.js"></script>
+    <style>
+        #app {position: absolute; top: 0; left: 0; bottom:0;}
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script>
+        // 
+        function query(item) { 
+            var obj = {};
+            var params = new URLSearchParams();
+            var o1 = {
+                satelliteName: item['名称'],
+                satelliteType: '',
+                model: '',
+                map: '',
+                description: '',
+                integralStartTime: '2020-06-02 02:00:00',
+                integralEndTime: '2020-06-03 23:00:00',
+                orbitType: 'ECI',
+                orbitParam1: parseFloat(item['X']),
+                orbitParam2: parseFloat(item['Y']),
+                orbitParam3: parseFloat(item['Z']),
+                orbitParam4: parseFloat(item['VX']),
+                orbitParam5: parseFloat(item['VY']),
+                orbitParam6: parseFloat(item['VZ']),
+                egm2008m: '20',
+                egm2008n: '20',
+                cr: '1',
+                cd: '2',
+                integralStep: '60',
+                reserve4: '60',
+                reserve5: '2',
+                reserve6: '1000'
+            };
+            Object.keys(o1).forEach((key) => {
+                // console.log(key, o1[key])
+                params.append(key, o1[key]);
+            })
+            axios.post('/dmind-plug-server/basedata/addSatellite', params).then((res) => {
+
+            }).catch(e => {
+                console.log(e)
+            });
+
+        }
+        // query(data)
+    </script>
+</body>
+
+</html>

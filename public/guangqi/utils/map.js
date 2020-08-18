@@ -39,10 +39,10 @@ var initMap = function ({
         run: true, //是否运行
         enableDamping: true, //动态阻尼系数 就是鼠标拖拽旋转灵敏度
         dampingFactor: true, //动态阻尼系数 就是鼠标拖拽旋转灵敏度
-        enableZoom: true, ////是否可以缩放
+        enableZoom: true, //是否可以缩放
         minDistance: 300, //设置相机距离原点的最远距离
         maxDistance: 1000, //设置相机距离原点的最远距离
-        enablePan: true, ////是否开启右键拖拽
+        enablePan: true, //是否开启右键拖拽
         enableRotate: true,
         autoRotate: false, //自动旋转
         autoRotateSpeed: 1,
@@ -61,9 +61,9 @@ var initMap = function ({
         sceneStyle: {
             blockColor: "rgb(27,46,94)",
             blockHeight: 1,
-
             borderColor: "rgb(53,110,195)",
             borderWidth: 2,
+            bottomColor: 'rgb(255, 255, 255)'
         },
         texture: {
         },
@@ -71,7 +71,7 @@ var initMap = function ({
             glowColor: "rgba(22,71,121,.9)",
             size: 1,
             perTime: 2,
-        }
+        },
     }
     var _Shaders = {
         SplineVShader: [
@@ -204,6 +204,7 @@ var initMap = function ({
         return cityPositions.filter(elem => name.indexOf(elem.name) != -1)[0];
     }
     this.attckCity = function (opt) {
+        if (opt == undefined) return false;
         // 车辆所在和攻击所在Id都为0 则不攻击
         // 起始 结束 都未0 择不进行攻击
         if (opt.provinceIdSrc == 0 && opt.provinceId == 0) {
@@ -251,6 +252,10 @@ var initMap = function ({
     }
     this.update = function (data) {
         //更新数据
+        shapeGroup.children.forEach(function (om) {
+            om.userData.value = 0;
+            _this.updateVal(om);
+        }) 
         currData.features.forEach(function (elem) {
             data.forEach(function (d) {
                 if (d.province.indexOf(elem.properties.name) !== -1) {
@@ -263,12 +268,11 @@ var initMap = function ({
                         if (om.userData.name === elem.properties.name) {
                             om.userData.currValue = 0;
                             om.userData.value = d.total;
-                            _this.updateVal(om)
+                            _this.updateVal(om);
                         }
                     })
                 }
             })
-
         })
         //模拟攻击 
         var index = 0;
@@ -288,25 +292,6 @@ var initMap = function ({
                     if (!dstNode || !srcNode) {
                         return false
                     }
-                    // var dst = projection(dstNode.cp);
-                    // var src = projection(srcNode.cp);
-                    // //攻击展示
-                    // _this.addAttackPlane([...dst, -15], 1, 1000);
-                    // _this.createAttack({
-                    //     src: [...src, 0],
-                    //     dst: [...dst, 0]
-                    // }, 1);
-                    //攻击图标
-                    /* var t = typeAttack[index % (typeAttack.length - 1)];
-                    _this.initTipes({ width: 128, height: 128, type: t, properties: dstNode }, function (mesh) {
-                        var tipsTween = new TWEEN.Tween(mesh.position).to({ z: -80 }, 2000);
-                        tipsTween.start();
-                        tipsTween.onComplete(function () {
-                            _this.dispose(mesh);
-                        })
-                    }) */
-                    // 
-
                 }
                 index++
             }, 300);
@@ -426,27 +411,73 @@ var initMap = function ({
         bgeo.addAttribute('cPosition', new THREE.Float32BufferAttribute(positions2, 3));
         return bgeo;
     }
+
+    var mapShader = {
+        vertexshader:`
+            varying vec3 v_position;
+            varying vec3 v_normal;
+            uniform float u_height;
+            void main() {
+                v_position = position;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); 
+                v_normal = normalMatrix * normal;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentshader:`
+            uniform vec3 u_color;
+            uniform float u_height;
+            uniform float u_opacity;
+            varying vec3 v_position;
+            float lerp(float x, float y, float t) {
+                return (1.0 - t) * x + t * y;
+            }
+            void main() {
+                float currY = v_position.z / u_height;
+                float r = lerp(u_color.r, u_color.r * 1.5, currY);
+                float g = lerp(u_color.g, u_color.g * 1.5, currY);
+                float b = lerp(u_color.b, u_color.b * 1.5, currY);  
+                vec3 f_color = vec3(r, g, b);
+                gl_FragColor = vec4(f_color, u_opacity);
+            }
+        `,
+    }
     function initSvg(path, properties) {
         //生成地图
         var draw_s = drawShape();
         var shapeGeo = new THREE.ExtrudeGeometry(draw_s, optionsE)
         shapeGeo.applyMatrix(new THREE.Matrix4().makeTranslation(-width / 2, -height / 2, 0));
-        var material = new THREE.MeshPhysicalMaterial({
+        /*var material = new THREE.MeshPhysicalMaterial({
             color: new THREE.Color(sceneOptions.sceneStyle.blockColor),
             flatShading: THREE.FlatShading,
             // transparent: true,
             // blending: THREE.AdditiveBlending,
-            opacity: 0.7
+            opacity: 1
+        });*/
+        var material = new THREE.ShaderMaterial({
+            uniforms: {
+                u_color: {
+                    value: new THREE.Color(sceneOptions.sceneStyle.blockColor)
+                },
+                u_opacity: {
+                    value: 1
+                },
+                u_height: {
+                    value: optionsE.depth
+                }
+            },
+            vertexShader: mapShader.vertexshader,
+	        fragmentShader: mapShader.fragmentshader
         });
         var shape = new THREE.Mesh(shapeGeo, material);
         shape.receiveShadow = true;
+        
         function drawShape() {
             var svgString = path
             var shape = transformSVGPathExposed(svgString);
             // 返回shape 
             return shape;
         }
-        // shape.position.z -= 1000
 
         shapeGroup.add(shape);
         svgShape.push(shape);
@@ -506,9 +537,9 @@ var initMap = function ({
         spriteMap.needsUpdate = true;
         var spriteMaterial = new THREE.SpriteMaterial({
             map: spriteMap,
-            transparent: true,
-            depthWrite: false,
-            opacity: 1
+            // transparent: true,
+            // depthWrite: false,
+            // opacity: 1
         });
         var sprite = new THREE.Sprite(spriteMaterial);
         sprite.scale.set(144, 18);
@@ -693,15 +724,24 @@ var initMap = function ({
         }
     }
     this.initCityNumber = function (properties, num) {
-        //显示当前危险个数 
-        var color = "#ffffff";
-        if (num > 1000) {
+        //显示当前危险个数  
+        /* if (num > 1000) {
             color = "#ff0000"
         } else if (num > 400) {
             color = "#ff4200"
         } else if (num > 0) {
             color = "#ff6f44"
+        } */
+
+        const colorConfig = window._ColorFontConfig || [];
+        let color = colorConfig[0].value;
+        for (let i = 0; i < colorConfig.length; i++) {
+            if (num >= colorConfig[i].value) {
+                color = colorConfig[i].color;
+            }
         }
+
+
         var cityNumber = addCityName({
             width: 128,
             height: 64,
@@ -733,7 +773,6 @@ var initMap = function ({
                 x += 10;
                 y += 9;
                 break;
-
         }
         spriteNumber.position.set(x, y, -22)
         spriteNumber.scale.set(40, 20, 20);
@@ -926,7 +965,18 @@ var initMap = function ({
         } else if (child.userData.value == 0) {
             colorIndex = 6;
         }
-        child.material.color.set(new THREE.Color(colors[colorIndex]))
+        // child.material.color.set(new THREE.Color(colors[colorIndex]))
+        // 设置颜色
+        const colorConfig = window._ColorConfig || [];
+        let color = colorConfig[0].value;
+        for (let i = 0; i < colorConfig.length; i++) {
+            if (child.userData.value >= colorConfig[i].value) {
+                color = colorConfig[i].color;
+            }
+        }
+        
+        // child.material.uniforms.u_color.value = new THREE.Color(colors[colorIndex]);
+        child.material.uniforms.u_color.value = new THREE.Color(color);
         // _this.setCityColor(child, child.userData.value)
         // 根据值改变高度
         var pz = -child.userData.currValue / MaxNumber * 10;
@@ -939,12 +989,6 @@ var initMap = function ({
         _this.disposeGroup(planeGroup)
         _this.disposeGroup(lineGroup)
         _this.disposeGroup(shapeGroup)
-
-        /* svgGroups.children.traverse(function (child) {
-            if (child.type === "Group") {
-                _this.disposeMesh(child)
-            }
-        }) */
     }
     _this.disposeGroup = function (group) {
         //递归删除所有children
@@ -996,8 +1040,6 @@ var initMap = function ({
         shapeGroup.children.forEach(child => {
             // 改变值 
             if (child.userData.currValue !== child.userData.value) {
-                // _this.updateVal(child); 
-
             }
             child.children.forEach(elem => {
                 if (elem.name === "animatePlane") {
@@ -1005,20 +1047,6 @@ var initMap = function ({
                         if (child.userData.value >= 100) {
                             node.userData.show = true
                         }
-                        /* if (node.userData.show) {
-                            node.visible = true;
-                            node.userData.process += 0.01;
-                            var process = node.userData.process;
-                            node.material.opacity = 1 - node.userData.process + 0.4;
-                            node.scale.set(process * 15, process * 15, process * 15);
-                            if (process >= 1) {
-                                node.userData.process = 0;
-                                // node.userData.show = false;
-                                node.userData.show = Math.random() > 0.9 ? true : false;
-                            }
-                        } else {
-                            node.visible = false;
-                        } */
                     })
                 }
             })
