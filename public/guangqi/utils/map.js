@@ -1031,7 +1031,7 @@ var initMap = function ({
             var data = obj.userData;
             typeof click == 'function' ? click(data) : null;
         } else {
-            click(false)
+            click(false);
         }
     }
     var MaxNumber = 1000;//最大值

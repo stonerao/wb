@@ -37,31 +37,32 @@ const ref = {
     dailyStat: url + "/ss/dailyStat/", // {day}
     eventDataDevice: url + "/ss/eventdataStatDeviceType/", // {day}
     eventDataCity: url + "/ss/eventdataStatCity/", //{days}?provinceId={provinceId}
+    eventdataStatModel: url + "/ss/eventdataStatModel/", //{days}?provinceId={provinceId}
 };
 var VM = new Vue({
     el: "#app",
     data: {
         title: "汽车网络安全态势感知",
         attackComponents: [{
-                name: "IVI",
-                img: "./image/IVI.png",
-                value: 4021,
-            },
-            {
-                name: "TBOX",
-                img: "./image/TBOX.png",
-                value: 12021,
-            },
-            {
-                name: "GATEWAY",
-                img: "./image/GATEWAY.png",
-                value: 23021,
-            },
-            {
-                name: "EUCs",
-                img: "./image/EUCs.png",
-                value: 54021,
-            },
+            name: "IVI",
+            img: "./image/IVI.png",
+            value: 4021,
+        },
+        {
+            name: "TBOX",
+            img: "./image/TBOX.png",
+            value: 12021,
+        },
+        {
+            name: "GATEWAY",
+            img: "./image/GATEWAY.png",
+            value: 23021,
+        },
+        {
+            name: "EUCs",
+            img: "./image/EUCs.png",
+            value: 54021,
+        },
         ],
         attackList: [],
         attackMapList: [],
@@ -73,26 +74,30 @@ var VM = new Vue({
         chartEventType: null,
         chartDayTop5: null,
         chartAttackEvent: null,
+        carModelsEvent: null,
         provinceId: "",
         map: null,
         dayItems: [{
-                value: 7,
-            },
-            {
-                value: 15,
-            },
-            {
-                value: 30,
-            },
-            {
-                value: 90,
-            },
+            value: 7,
+        },
+        {
+            value: 15,
+        },
+        {
+            value: 30,
+        },
+        {
+            value: 90,
+        },
         ],
         itemsAnimatList: null,
         cartTotal: 0,
         newCar: 0,
         newEventNum: 0,
         eventTotal: 0,
+        eventToTotal:0,
+        activeCar: 0,
+        typeCars: 0,
         selectCity: "",
         attackNumber: 50, // 攻击个数
         cityIdArr: {
@@ -130,6 +135,9 @@ var VM = new Vue({
             "65": "香港特别行政区",
             "67": "澳门特别行政区",
         },
+        cityIndex: 0,
+        cityNameTitle: "",
+        stopNum: 2,
         infos: _Config,
     },
     components: {
@@ -152,11 +160,11 @@ var VM = new Vue({
             "TCK ACK 端口扫描",
             "TCK ACK Flood",
             "TCP Xmax端口扫描",
-            "设置ACK和RST标志位的dos攻击",
-            "服务及版本扫描探测",
-            "UDP端口扫描",
-            "TCP终端存活探测",
-            "ICMP终端存活探测",
+            // "设置ACK和RST标志位的dos攻击",
+            // "服务及版本扫描探测",
+            // "UDP端口扫描",
+            // "TCP终端存活探测",
+            // "ICMP终端存活探测",
         ];
         var datas = [...new Array(10)].map((elem, index) => {
             return {
@@ -164,15 +172,27 @@ var VM = new Vue({
                 value: parseInt(Math.random() * 2500),
             };
         });
+
         this.chartEventType = new initBarList({
             id: "eventType",
             data: datas,
-            color: "#4081ff",
-            dstColor: "#65bef5",
+            color: _Config.attackTypeConfig.color,
+            dstColor: _Config.attackTypeConfig.dstColor,
+            barWidth: _Config.attackTypeConfig.barWidth
         });
+
         this.chartAttackEvent = new initLineList({
             id: "attackEvent",
-            data: datas,
+            data: datas, 
+            areaStyle: _Config.attacktrend.areaStyle,
+            itemStyle: _Config.attacktrend.itemStyle
+        });
+        this.carModelsEvent = new initBarList2({
+            id: "carModels",
+            data: [],
+            color: _Config.carModelsEvent.color,
+            dstColor: _Config.carModelsEvent.dstColor,
+            barWidth: _Config.carModelsEvent.barWidth,
         });
         var dailyDatas = [...new Array(5)].map((elem, index) => {
             return {
@@ -184,14 +204,16 @@ var VM = new Vue({
         this.chartDayTop5 = new initBarList({
             id: "daily",
             data: dailyDatas,
-            color: "#ff8d36",
-            dstColor: "#ffea61",
+            color: _Config.attackSort.color,
+            dstColor: _Config.attackSort.dstColor,
+            barWidth: _Config.attackSort.barWidth,
         });
-        this.parts = new initBarList2({
+        this.parts = new initBarList({
             id: "attackComm",
             data: dailyDatas,
-            color: "#ff8d36",
-            dstColor: "#ffea61",
+            color: _Config.partsConfig.color,
+            dstColor: _Config.partsConfig.dstColor,
+            barWidth: _Config.partsConfig.barWidth,
         });
 
         /* map */
@@ -207,6 +229,7 @@ var VM = new Vue({
                 for (const key in _this.cityIdArr) {
                     const elem = _this.cityIdArr[key];
                     if (elem.indexOf(res.name) != -1) {
+                        _this.stopNum = 2;
                         _this.selectCity = key;
                         _this.getCityData(_this.selectDay, key);
                         continue;
@@ -214,39 +237,57 @@ var VM = new Vue({
                 }
                 return;
             },
-            attackCallBack: function (data) {},
+            attackCallBack: function (data) { },
         });
 
         window.addEventListener("resize", function () {
             _this.map.resize(); //地图resize event
             _this.chartEventType.resize();
             _this.chartAttackEvent.resize();
+            _this.carModelsEvent.resize();
             _this.chartDayTop5.resize();
             _this.parts.resize();
         });
 
         //dete
         this.getDate();
-        setInterval(() => {
-            this.getDate();
-        }, 10000);
+
 
         //安全事件
-        //中下方
         this.getEventType(this.attackNumber);
-        setInterval(() => {
-            this.getEventType(this.attackNumber);
-        }, 60000);
-
-        // 左上方
         this.selectEvent();
+        this.getCarModels();// 饼图
+
+
+        // 定时更新数据
         setInterval(() => {
+            //中下方
+            this.getEventType(this.attackNumber);
+            // 左上方
             this.selectEvent();
-        }, 60000);
+            this.getCarModels();// 车型
+        }, _Config.dataTime);
 
 
         // 创建tips
         creatTips($('.g-center'));
+
+
+        // 每三秒一次切换 
+        setInterval(() => {
+            if (this.stopNum > 0) {
+                this.stopNum--;
+                return false;
+            }
+            const keys = Object.keys(this.cityIdArr);
+
+            const key = keys[this.cityIndex % keys.length];
+            this.selectCity = key;
+            _this.getCityData(this.selectDay, this.selectCity);
+
+            this.cityIndex++;
+
+        }, _Config.cityTime)
     },
     methods: {
         getCity(val, type) {
@@ -317,17 +358,42 @@ var VM = new Vue({
                 typeof callback === "function" ? callback(res) : false;
             });
         },
+        sec_to_time (s) {
+            var t;
+            if (s > -1) {
+                var hour = Math.floor(s / 3600);
+                var min = Math.floor(s / 60) % 60;
+                var sec = s % 60;
+                var day = Math.floor(hour / 24); 
+
+                if (hour < 10) {
+                    t = '0' + hour + ":";
+                } else {
+                    t = day + " 天 " + (hour % 24) + " 时 ";
+                }
+
+                if (min < 10) { t += "0"; }
+                t += min + " 分 ";
+                // if (sec < 10) { t += "0"; }
+                // t += sec.toFixed(2);
+            }
+            return t;
+        },
         getDate() {
-            axios(ref.date).then((res) => {
+         
+            axios(ref.date).then((res) => { 
                 if (res.success) {
                     if (this.dataInterval) clearInterval(this.dataInterval);
                     let dateTime = res.realtime;
+                    let dateVal = res.realtime -( res.starttime || 0);
+                   
                     let date = new Date(res.realtime);
-                    this.date = GetCurrentDate(date);
+                    // this.date = GetCurrentDate(date);
+                    // this.date = GetCurrentDate(date);
                     this.dataInterval = setInterval(() => {
-                        dateTime += 1000;
-                        date = new Date(dateTime);
-                        this.date = GetCurrentDate(date);
+                        dateVal += 1000;
+                        // date = new Date(dateTime);
+                        this.date = this.sec_to_time(dateVal / 1000);
                     }, 1000);
                 }
             });
@@ -337,7 +403,7 @@ var VM = new Vue({
                 if (res.success) {
                     if (this.itemsAnimatList) clearInterval(this.itemsAnimatList);
                     const data = res.data;
-                    console.log(res);
+
                     this.attackList = data.map((elem, index) => {
                         var content = "";
                         try {
@@ -352,13 +418,18 @@ var VM = new Vue({
                                 break;
                             default:
                                 color = "";
+                        };
+                        let vim = elem.vehicleId;
+                        if (String(elem.vehicleId).length > 20) {
+                            vim = "..." + vim.slice(String(elem.vehicleId).length - 20);
                         }
+
                         return {
                             id: index + 1,
-                            vin: elem.vehicleId,
+                            vin: vim,
                             code: elem.code,
                             ip: typeof content === "object" ? content.src_ip : "-",
-                            type: elem.name,
+                            type: elem.name == "LogModule_start" ? "- -" : elem.name,
                             address: elem.province + " " + elem.city,
                             date: GetCurrentDate(new Date(elem.eventTime)),
                             src: "",
@@ -379,6 +450,7 @@ var VM = new Vue({
                             city: elem.city,
                         };
                     });
+
                     this.itemsAnimatList = setInterval(() => {
                         if (this.attackList.length == 0) {
                             clearInterval(this.itemsAnimatList);
@@ -387,7 +459,7 @@ var VM = new Vue({
                         var obj = this.attackList.shift();
                         this.attackList.push(obj);
                         this.map.attckCity(obj);
-                    }, 500);
+                    }, _Config.updateListTime);
                 }
             });
         },
@@ -405,7 +477,9 @@ var VM = new Vue({
                         grade: elem.eventCategory.grade,
                     }));
                     this.map.updateTypes(items);
-                    this.chartEventType.update(items);
+                    let t = items.sort((a, b) => a.value - b.value).filter((e, i) => i < 5);
+
+                    this.chartEventType.update(t);
                 }
             });
         },
@@ -425,6 +499,7 @@ var VM = new Vue({
                             name: elem.province,
                         }))
                         .sort((a, b) => b.value - a.value);
+                    if (!items[0]) return false;
                     const cityName = items[0].name;
                     if (!this.selectCity) {
                         for (const key in this.cityIdArr) {
@@ -455,6 +530,8 @@ var VM = new Vue({
                     var newCar = []; //新增车辆
                     var cartTotal = []; //车辆累计总数
                     var eventTotal = []; //车辆总数
+                    var activeCar = []; // 活跃车辆
+                    var typeCars = []; // 车型总数
                     // 0 今日事件新增；1 今日车辆新增；2 车辆累计总数；3 事件累计总数
                     let data = res.data;
                     for (var i = 0; i < data.length; i++) {
@@ -484,6 +561,18 @@ var VM = new Vue({
                                     name: GetCurrentDate(new Date(elem.stateDate)),
                                 });
                                 break;
+                            case 4:
+                                activeCar.push({
+                                    value: elem.total,
+                                    name: GetCurrentDate(new Date(elem.stateDate)),
+                                });
+                                break;
+                            case 5:
+                                typeCars.push({
+                                    value: elem.total,
+                                    name: GetCurrentDate(new Date(elem.stateDate)),
+                                });  
+                                break;
                         }
                     }
                     // var _cartTotal = this.cartTotal;
@@ -492,28 +581,34 @@ var VM = new Vue({
                         newCar: this.newCar,
                         newEventNum: this.newEventNum,
                         eventTotal: this.eventTotal,
+                        typeCars: this.typeCars,
+                        activeCar: this.activeCar,
                     };
                     var target = {
-                        cartTotal: cartTotal[cartTotal.length - 1].value,
-                        newCar: newCar[newCar.length - 1].value,
-                        newEventNum: newEvent[newEvent.length - 1].value,
-                        eventTotal: eventTotal[eventTotal.length - 1].value,
+                        cartTotal: this.widgetVal(cartTotal),
+                        newCar: this.widgetVal(newCar),
+                        newEventNum: this.widgetVal(newEvent),
+                        eventTotal: this.widgetVal(eventTotal),
+                        activeCar: this.widgetVal(activeCar),
+                        typeCars: this.widgetVal(typeCars)
                     };
 
                     var animate = new TWEEN.Tween(obj).to(target, 2000).start();
 
-                    animate
-                        .onUpdate(() => {
-                            this.cartTotal = parseInt(obj.cartTotal);
-                            this.newCar = parseInt(obj.newCar);
-                            this.newEventNum = parseInt(obj.newEventNum);
-                            this.eventTotal = parseInt(obj.eventTotal);
-                        })
-                        .onComplete(() => {
+                    animate.onUpdate(() => {
+                        this.cartTotal = parseInt(obj.cartTotal);
+                        this.newCar = parseInt(obj.newCar);
+                        this.newEventNum = parseInt(obj.newEventNum);
+                        this.eventTotal = parseInt(obj.eventTotal);
+                        this.activeCar = parseInt(obj.activeCar || 0);
+                        this.typeCars = parseInt(obj.typeCars || 0);
+                    }).onComplete(() => {
                             this.cartTotal = obj.cartTotal;
                             this.newCar = obj.newCar;
                             this.newEventNum = obj.newEventNum;
                             this.eventTotal = obj.eventTotal;
+                            this.activeCar = parseInt(obj.activeCar || 0);
+                            this.typeCars = parseInt(obj.typeCars || 0);
                         });
                     newEvent = newEvent.map((elem) => {
                         return {
@@ -524,6 +619,10 @@ var VM = new Vue({
                     this.chartAttackEvent.update(newEvent);
                 }
             });
+        },
+        widgetVal(arr) {
+            if (arr.length == 0) return 0;
+            return arr[arr.length - 1].value || 0;
         },
         getDeviceData(day = 7) {
             //获取设备数据
@@ -554,7 +653,7 @@ var VM = new Vue({
                 }
             });
         },
-        getCityData(day = 7, provinceId) {
+        getCityData(day = 7, provinceId) { 
             this.attackMapList = [];
             axios(ref.eventDataCity + day + "?provinceId=" + provinceId).then((res) => {
                 if (res.success) {
@@ -576,6 +675,22 @@ var VM = new Vue({
                 }
             });
         },
+        getCarModels(day = 7, provinceId) {
+            this.attackMapList = [];
+            // "?provinceId=" + provinceId
+            axios(ref.eventdataStatModel + day).then((res) => {
+                if (res.success) {
+                    let data = res.data;
+                    const vals = data.map(elem => {
+                        return {
+                            name: elem.model.name,
+                            value: elem.total
+                        }
+                    });
+                    this.carModelsEvent.update(vals);
+                }
+            });
+        },
         setMapAttackTop(data) {
             //地图左下 Top5
             data = data || [];
@@ -585,12 +700,26 @@ var VM = new Vue({
                 x: event.clientX,
                 y: event.clientY - 95
             }
-            setTips(cont ,config) 
+            setTips(cont, config)
         },
         tipsMoveOut() {
             removeTips()
         }
     },
+    watch: {
+        selectCity(val) {
+            if (this.cityIdArr[val]) {
+                this.cityNameTitle = this.cityIdArr[val]; 
+            }
+        },
+        eventTotal(val) {
+            if (val > 99999999){
+                this.eventToTotal = Math.floor(val / 10000) + '万'
+            }else{
+                this.eventToTotal = val;
+            }
+        }
+    }
 });
 
 function GetCurrentDate(date) {
@@ -638,32 +767,32 @@ function creatTips(container) {
     );
     tipcont.append(
         $(tmp.bage)
-        .css({
-            position: "relative",
-            padding: "4px 6px",
-            color: "#fff",
-            "font-size": "12px",
-            "margin-left": "10px",
-        })
-        .append(
-            $(tmp.icon).css({
-                border: "3px solid #fff",
-                position: "absolute",
-                left: "-2px",
-                "margin-top": "6px",
-                "border-radius": "3px",
-            })
-        )
-        .append(
-            $(tmp.txt)
             .css({
                 position: "relative",
                 padding: "4px 6px",
-                color: "#fff;",
+                color: "#fff",
                 "font-size": "12px",
+                "margin-left": "10px",
             })
-            .html("")
-        )
+            .append(
+                $(tmp.icon).css({
+                    border: "3px solid #fff",
+                    position: "absolute",
+                    left: "-2px",
+                    "margin-top": "6px",
+                    "border-radius": "3px",
+                })
+            )
+            .append(
+                $(tmp.txt)
+                    .css({
+                        position: "relative",
+                        padding: "4px 6px",
+                        color: "#fff;",
+                        "font-size": "12px",
+                    })
+                    .html("")
+            )
     );
     tipconts = tipcont;
     $(container).append(tipcont);
@@ -674,7 +803,7 @@ function removeTips() {
     tipconts.find("span#DM_txt").html("");
 }
 
-function setTips(conts, position) { 
+function setTips(conts, position) {
     tipconts.css({
         left: position.x,
         top: position.y,

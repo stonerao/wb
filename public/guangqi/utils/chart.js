@@ -1,6 +1,6 @@
 function initBarList({
     id, data,
-    color, dstColor
+    color, dstColor, barWidth = 13
 }) {
     if (!echarts) {
         return console.error("not echarts!")
@@ -65,7 +65,7 @@ function initBarList({
                 {
                     name: 'value',
                     type: 'bar',
-                    barWidth: 13,
+                    barWidth: barWidth,
                     label: {
                         normal: {
                             show: true,
@@ -108,7 +108,7 @@ function initBarList({
                     label: {
                         normal: {
                             show: true,
-                            position: [0, '-20'],
+                            position: [0, -20],
                             textStyle: {
                                 fontSize: 14,
                                 color: '#fff',
@@ -271,7 +271,7 @@ function initBarList2({
     }
 }
 function initLineList({
-    id, data
+    id, data, areaStyle, itemStyle
 }) {
     /**
      * @param {string} id 盒子ID
@@ -364,31 +364,79 @@ function initLineList({
                         //线性渐变，前4个参数分别是x0,y0,x2,y2(范围0~1);相当于图形包围盒中的百分比。如果最后一个参数是‘true’，则该四个值是绝对像素位置。
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                             offset: 0,
-                            color: 'rgba(30,254,209,0.3)'
+                            color: areaStyle.color1
                         },
                         {
                             offset: 1,
-                            color: 'rgba(30,254,209,0)'
+                            color: areaStyle.color2
                         }
                         ], false),
-                        shadowColor: 'rgba(53,142,215, 0.9)', //阴影颜色
+                        shadowColor: areaStyle.shadowColor, //阴影颜色
                         shadowBlur: 10 //shadowBlur设图形阴影的模糊大小。配合shadowColor,shadowOffsetX/Y, 设置图形的阴影效果。
                     }
                 },
-                itemStyle: {
-                    normal: {
-
-                        color: "#1effd2"
-                    },
-                    emphasis: {
-                        color: 'rgb(0,196,132)',
-                        borderColor: 'rgba(0,196,132,0.2)',
-                        extraCssText: 'box-shadow: 8px 8px 8px rgba(0, 0, 0, 1);',
-                        borderWidth: 10
-                    }
-                },
+                itemStyle: itemStyle,
                 data: values
             }]
+        }
+    }
+    var option = returnOption(data)
+    var myChart = echarts.init(document.getElementById(id));
+    myChart.setOption(option);
+    this.resize = function () {
+        myChart.resize();
+    }
+    this.update = function (data) {
+        var option = returnOption(data);
+        myChart.setOption(option);
+    }
+}
+function initPie({ id, data }) {
+    // 创建饼图
+    /**
+    * @param {string} id 盒子ID
+    * @param {arrary} data 数据 {date,value}
+    * 
+    */
+    const colors = ["#47A2FC", "#5ACA74", "#FCD34C", "#879CE8", "#B78AEF", "#F3657D", "#4ECCCB"]
+    function returnOption(data) {
+        data = data || [];
+        let values = [], names = [];
+        data.forEach((elem, i) => {
+            values.push(elem.value);
+            names.push(elem.name);
+            // elem.color = colors[i % colors.length];
+        })
+        return {
+            // tooltip: {
+            //     trigger: 'item',
+            //     formatter: '{a} <br/>{b}: {c} ({d}%)'
+            // },
+            // legend: {
+            //     orient: 'vertical',
+            //     left: 10,
+            //     data: names
+            // },
+            itemStyle: {
+
+            },
+            color: colors,
+            series: [
+                {
+                    name: '访问来源',
+                    type: 'pie',
+                    radius: ['40%', '60%'],
+
+                    data: data,
+                    label: {
+                        normal: {
+                            formatter: ['{b|{b}}', '{c|{c}}'].join('\n'),
+                            rich: {
+                            },
+                        }
+                    },
+                }
+            ]
         }
     }
     var option = returnOption(data)
